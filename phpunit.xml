@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<phpunit bootstrap="vendor/autoload.php"
+         executionOrder="depends,defects"
+         cacheDirectory="/tmp/.phpunit.cache"
+         colors="true"
+         displayDetailsOnTestsThatTriggerWarnings="true">
+  <coverage/>
+  <testsuites>
+    <testsuite name="default">
+      <directory>./tests</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">./src</directory>
+    </include>
+  </source>
+</phpunit>

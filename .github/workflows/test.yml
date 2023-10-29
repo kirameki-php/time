@@ -1,0 +1,21 @@
+name: test
+on: [push, pull_request]
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: php-actions/composer@v6
+      with:
+        php_extensions: intl pcntl
+    - name: Run test with docker compose
+      run: docker compose run --quiet-pull --rm app composer ci-test
+    - uses: php-actions/phpstan@v3
+      with:
+        memory_limit: 1G
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        fail_ci_if_error: true
+        verbose: true

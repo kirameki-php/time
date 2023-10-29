@@ -1,0 +1,37 @@
+{
+  "name": "kirameki/time",
+  "description": "Time library for Kirameki Framework",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">= 8.2",
+    "kirameki/core": "dev-main"
+  },
+  "require-dev": {
+    "kirameki/dumper": "dev-main",
+    "phpstan/phpstan": "~1",
+    "phpunit/phpunit": "~10"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kirameki\\Time\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\Kirameki\\Time\\": "tests/src/"
+    }
+  },
+  "config": {
+    "discard-changes": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "test": "vendor/bin/phpunit --coverage-html=coverage",
+    "ci-test": "vendor/bin/phpunit --coverage-clover ./coverage.xml",
+    "analyze": "vendor/bin/phpstan analyse --memory-limit 1G"
+  }
+}
