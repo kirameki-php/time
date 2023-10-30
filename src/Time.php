@@ -19,7 +19,8 @@ use function is_float;
  */
 class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 {
-    public const RFC3339_HUMAN = 'Y-m-d H:i:s.u P';
+    public const RFC3339_LOCAL = 'Y-m-d H:i:s';
+    public const RFC3339_FULL = 'Y-m-d H:i:s.u P';
 
     /**
      * @var Closure():static|static|null
@@ -32,7 +33,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public function __construct(string $time = null, DateTimeZone $timezone = null)
     {
         if ($time === null || $time === 'now') {
-            $time = (static::invokeTestNow() ?? new DateTime)->format(self::RFC3339_HUMAN);
+            $time = (static::invokeTestNow() ?? new DateTime)->format(self::RFC3339_FULL);
         }
 
         parent::__construct($time, $timezone);
@@ -79,7 +80,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromInterface(DateTimeInterface $object): static
     {
-        return new static($object->format(static::RFC3339_HUMAN));
+        return new static($object->format(static::RFC3339_FULL));
     }
 
     /**
@@ -317,11 +318,11 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         return $this->shift(seconds: -$seconds);
     }
 
-    public function addUnit(TimeUnit $unit, int|float $value): static
+    public function addUnit(Unit $unit, int|float $value): static
     {
         if (is_float($value)) {
             return match ($unit) {
-                TimeUnit::Second => $this->addSeconds($value),
+                Unit::Second => $this->addSeconds($value),
                 default => throw new InvalidArgumentException('Only seconds can be a float.', [
                     'unit' => $unit,
                     'value' => $value,
@@ -330,16 +331,16 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         }
 
         return match ($unit) {
-            TimeUnit::Year => $this->addYears($value),
-            TimeUnit::Month => $this->addMonths($value),
-            TimeUnit::Day => $this->addDays($value),
-            TimeUnit::Hour => $this->addHours($value),
-            TimeUnit::Minute => $this->addMinutes($value),
-            TimeUnit::Second => $this->addSeconds($value),
+            Unit::Year => $this->addYears($value),
+            Unit::Month => $this->addMonths($value),
+            Unit::Day => $this->addDays($value),
+            Unit::Hour => $this->addHours($value),
+            Unit::Minute => $this->addMinutes($value),
+            Unit::Second => $this->addSeconds($value),
         };
     }
 
-    public function addUnitWithClamping(TimeUnit $unit, int|float $value, TimeUnit $clamp): static
+    public function addUnitWithClamping(Unit $unit, int|float $value, Unit $clamp): static
     {
         $original = clone $this;
 
@@ -355,27 +356,27 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         return $added;
     }
 
-    public function toStartOfUnit(TimeUnit $unit): static
+    public function toStartOfUnit(Unit $unit): static
     {
         return match ($unit) {
-            TimeUnit::Year => $this->toStartOfYear(),
-            TimeUnit::Month => $this->toStartOfMonth(),
-            TimeUnit::Day => $this->toStartOfDay(),
-            TimeUnit::Hour => $this->toStartOfHour(),
-            TimeUnit::Minute => $this->set(seconds: 0),
-            TimeUnit::Second => $this->set(seconds: (int) $this->getSeconds()),
+            Unit::Year => $this->toStartOfYear(),
+            Unit::Month => $this->toStartOfMonth(),
+            Unit::Day => $this->toStartOfDay(),
+            Unit::Hour => $this->toStartOfHour(),
+            Unit::Minute => $this->set(seconds: 0),
+            Unit::Second => $this->set(seconds: (int) $this->getSeconds()),
         };
     }
 
-    public function toEndOfUnit(TimeUnit $unit): static
+    public function toEndOfUnit(Unit $unit): static
     {
         return match ($unit) {
-            TimeUnit::Year => $this->toEndOfYear(),
-            TimeUnit::Month => $this->toEndOfMonth(),
-            TimeUnit::Day => $this->toEndOfDay(),
-            TimeUnit::Hour => $this->toEndOfHour(),
-            TimeUnit::Minute => $this->set(seconds: 59.999999),
-            TimeUnit::Second => $this->set(seconds: ((int) $this->getSeconds()) + 0.999999),
+            Unit::Year => $this->toEndOfYear(),
+            Unit::Month => $this->toEndOfMonth(),
+            Unit::Day => $this->toEndOfDay(),
+            Unit::Hour => $this->toEndOfHour(),
+            Unit::Minute => $this->set(seconds: 59.999999),
+            Unit::Second => $this->set(seconds: ((int) $this->getSeconds()) + 0.999999),
         };
     }
 
@@ -549,7 +550,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     /**
      * @return string
      */
-    public function toHttpFormat(): string
+    public function toHttpString(): string
     {
         return $this->format(self::RFC822);
     }
@@ -557,9 +558,17 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     /**
      * @return string
      */
+    public function toLocalString(): string
+    {
+        return $this->format(self::RFC3339_LOCAL);
+    }
+
+    /**
+     * @return string
+     */
     public function toString(): string
     {
-        return $this->format(self::RFC3339_HUMAN);
+        return $this->format(self::RFC3339_FULL);
     }
 
     /**

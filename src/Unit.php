@@ -2,7 +2,7 @@
 
 namespace Kirameki\Time;
 
-enum TimeUnit
+enum Unit
 {
     case Year;
     case Month;
