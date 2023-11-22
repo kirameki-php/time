@@ -3,7 +3,6 @@
 namespace Tests\Kirameki\Time;
 
 use Kirameki\Core\Testing\TestCase;
-use function dump;
 
 final class TimeTest extends TestCase
 {
