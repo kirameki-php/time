@@ -8,7 +8,6 @@ use DateTimeInterface;
 use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
-use Kirameki\Core\Exceptions\RuntimeException;
 use Kirameki\Core\Json;
 use Stringable;
 use function implode;
@@ -55,7 +54,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         // https://www.php.net/manual/en/datetime.getlasterrors.php#102686
         $errors = DateTime::getLastErrors();
         if ($errors !== false && $errors['error_count'] + $errors['warning_count'] === 0) {
-            throw new RuntimeException(Json::encode($errors), [
+            throw new InvalidArgumentException(Json::encode($errors), [
                 'format' => $format,
                 'datetime' => $datetime,
                 'timezone' => $timezone,
