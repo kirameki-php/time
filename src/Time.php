@@ -2,14 +2,14 @@
 
 namespace Kirameki\Time;
 
-use Closure;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
-use RuntimeException;
+use Kirameki\Core\Exceptions\RuntimeException;
+use Kirameki\Core\Json;
 use Stringable;
 use function implode;
 use function is_float;
@@ -23,17 +23,12 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public const RFC3339_FULL = 'Y-m-d H:i:s.u P';
 
     /**
-     * @var Closure():static|static|null
-     */
-    protected static mixed $testNow = null;
-
-    /**
      * @inheritDoc
      */
     public function __construct(string $time = null, DateTimeZone $timezone = null)
     {
         if ($time === null || $time === 'now') {
-            $time = (static::invokeTestNow() ?? new DateTime)->format(self::RFC3339_FULL);
+            $time = (new DateTime)->format(self::RFC3339_FULL);
         }
 
         parent::__construct($time, $timezone);
@@ -60,8 +55,11 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         // https://www.php.net/manual/en/datetime.getlasterrors.php#102686
         $errors = DateTime::getLastErrors();
         if ($errors !== false && $errors['error_count'] + $errors['warning_count'] === 0) {
-            // TODO: more precise error handling
-            throw new RuntimeException(Json::encode($errors));
+            throw new RuntimeException(Json::encode($errors), [
+                'format' => $format,
+                'datetime' => $datetime,
+                'timezone' => $timezone,
+            ]);
         }
 
         return static::createFromInterface($base);
@@ -580,38 +578,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     # endregion Conversion ---------------------------------------------------------------------------------------------
-
-    # region Testing ---------------------------------------------------------------------------------------------------
-
-    /**
-     * @param static|Closure():static|null $now
-     */
-    public static function setTestNow(Time|Closure|null $now): void
-    {
-        self::$testNow = $now;
-    }
-
-    /**
-     * @return bool
-     */
-    public static function hasTestNow(): bool
-    {
-        return self::$testNow !== null;
-    }
-
-    /**
-     * @return Time|null
-     */
-    protected static function invokeTestNow(): ?Time
-    {
-        $now = static::$testNow;
-        if ($now instanceof Closure) {
-            return $now();
-        }
-        return $now;
-    }
-
-    # endregion Testing ------------------------------------------------------------------------------------------------
 
     # region Calendar --------------------------------------------------------------------------------------------------
 
