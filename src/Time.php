@@ -609,7 +609,9 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
-     * @return int<0,59>
+     * Returns minutes (0-59)
+     *
+     * @return int
      */
     public function getMinutes(): int
     {
