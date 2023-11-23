@@ -18,8 +18,7 @@ use function is_float;
  */
 class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 {
-    public const RFC3339_LOCAL = 'Y-m-d H:i:s';
-    public const RFC3339_FULL = 'Y-m-d H:i:s.u P';
+    public const RFC3339_HUMAN = 'Y-m-d H:i:s.u P';
 
     /**
      * @inheritDoc
@@ -27,7 +26,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public function __construct(string $time = null, DateTimeZone $timezone = null)
     {
         if ($time === null || $time === 'now') {
-            $time = (new DateTime)->format(self::RFC3339_FULL);
+            $time = (new DateTime)->format(self::RFC3339_EXTENDED);
         }
 
         parent::__construct($time, $timezone);
@@ -77,7 +76,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromInterface(DateTimeInterface $object): static
     {
-        return new static($object->format(static::RFC3339_FULL));
+        return new static($object->format(self::RFC3339_EXTENDED));
     }
 
     /**
@@ -557,7 +556,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public function toLocalString(): string
     {
-        return $this->format(self::RFC3339_LOCAL);
+        return $this->format('Y-m-d H:i:s.u');
     }
 
     /**
@@ -565,7 +564,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public function toString(): string
     {
-        return $this->format(self::RFC3339_FULL);
+        return $this->format(self::RFC3339_HUMAN);
     }
 
     /**
