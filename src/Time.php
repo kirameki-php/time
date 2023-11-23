@@ -212,7 +212,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     {
         $added = $this->shift(months: $months);
 
-        if ($overflow) {
+        if (!$overflow) {
             if ($added->getDay() === $this->getDay()) {
                 return $added;
             }
