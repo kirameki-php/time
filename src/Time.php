@@ -10,6 +10,8 @@ use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Json;
 use Stringable;
+use function date_default_timezone_get;
+use function dump;
 use function implode;
 use function is_float;
 
@@ -18,21 +20,27 @@ use function is_float;
  */
 class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 {
-    public const RFC3339_HUMAN = 'Y-m-d H:i:s.u P';
-
-    /**
-     * @inheritDoc
-     */
-    public function __construct(string $time = null, DateTimeZone $timezone = null)
-    {
-        if ($time === null || $time === 'now') {
-            $time = (new DateTime)->format(self::RFC3339_EXTENDED);
-        }
-
-        parent::__construct($time, $timezone);
-    }
+    public const RFC3339_HUMAN = 'Y-m-d H:i:s.up';
+    public const RFC3339_FULL = 'Y-m-d\\TH:i:s.up';
 
     # region Creation --------------------------------------------------------------------------------------------------
+
+    /**
+     * @param string|null $datetime
+     */
+    public function __construct(?string $datetime = null)
+    {
+        parent::__construct($datetime ?? 'now');
+    }
+
+    /**
+     * @param string $datetime
+     * @return static
+     */
+    public static function parse(string $datetime): static
+    {
+        return new static($datetime);
+    }
 
     /**
      * @inheritDoc
@@ -76,7 +84,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromInterface(DateTimeInterface $object): static
     {
-        return new static($object->format(self::RFC3339_EXTENDED));
+        return new static($object->format(self::RFC3339_FULL));
     }
 
     /**
@@ -449,6 +457,11 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         return $this->setTimezone(new DateTimeZone($zone));
     }
 
+    public function toLocal(): static
+    {
+        return $this->toTimeZone(date_default_timezone_get());
+    }
+
     /**
      * @return static
      */
@@ -512,22 +525,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     # region Conversion ------------------------------------------------------------------------------------------------
 
     /**
-     * @return int
-     */
-    public function toInt(): int
-    {
-        return $this->getTimestamp();
-    }
-
-    /**
-     * @return float
-     */
-    public function toFloat(): float
-    {
-        return (float) $this->format('U.u');
-    }
-
-    /**
      * @inheritDoc
      */
     public function jsonSerialize(): string
@@ -544,19 +541,19 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function toHttpString(): string
+    public function toInt(): int
     {
-        return $this->format(self::RFC822);
+        return $this->getTimestamp();
     }
 
     /**
-     * @return string
+     * @return float
      */
-    public function toLocalString(): string
+    public function toFloat(): float
     {
-        return $this->format('Y-m-d H:i:s.u');
+        return (float) $this->format('U.u');
     }
 
     /**
@@ -652,11 +649,13 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
+     * Returns the day of the year (1-366)
+     *
      * @return int
      */
     public function getDayOfYear(): int
     {
-        return (int) $this->format('z');
+        return 1 + (int) $this->format('z');
     }
 
     /**

@@ -7,11 +7,14 @@ use Psr\Clock\ClockInterface;
 
 class Clock implements ClockInterface
 {
+    protected DateTimeZone $timezone;
+
     public function __construct(
-        protected ?DateTimeZone $timezone = null,
+        ?DateTimeZone $timezone = null,
         protected ?Time $fixed = null,
     )
     {
+        $this->timezone = $timezone ?? new DateTimeZone(date_default_timezone_get());
     }
 
     /**
@@ -19,13 +22,13 @@ class Clock implements ClockInterface
      */
     public function now(): Time
     {
-        return $this->fixed ?? new Time(null, $this->timezone);
+        return $this->fixed ?? (new Time())->setTimezone($this->timezone);
     }
 
     /**
-     * @return DateTimeZone|null
+     * @return DateTimeZone
      */
-    public function getTimezone(): ?DateTimeZone
+    public function getTimezone(): DateTimeZone
     {
         return $this->timezone;
     }
