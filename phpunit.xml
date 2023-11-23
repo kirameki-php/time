@@ -2,8 +2,11 @@
 <phpunit bootstrap="vendor/autoload.php"
          executionOrder="depends,defects"
          cacheDirectory="/tmp/.phpunit.cache"
-         colors="true"
-         displayDetailsOnTestsThatTriggerWarnings="true">
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         colors="true">
   <coverage/>
   <testsuites>
     <testsuite name="default">
