@@ -3,7 +3,6 @@
 namespace Tests\Kirameki\Time;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\DayOfWeek;
@@ -29,13 +28,32 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.111111+09:00', (new Time('2000-01-01 12:34:56.111111+09:00'))->toString());
     }
 
+    public function test_toTimezone(): void
+    {
+        $source = new Time('2000-01-01 12:34:56Z');
+        $zoned = $source->toTimezone('Asia/Tokyo');
+        $this->assertSame('2000-01-01 21:34:56.000000+09:00', $zoned->toString());
+        $this->assertNotSame($source, $zoned);
+    }
+
     public function test_toLocal(): void
     {
         $tz = 'America/Los_Angeles';
         date_default_timezone_set($tz);
         $this->runAfterTearDown(fn() => date_default_timezone_set('UTC'));
 
-        $this->assertSame('1999-12-31 19:34:56.000000-08:00', (new Time('2000-01-01 12:34:56+09:00'))->toLocal()->toString());
+        $source =new Time('2000-01-01 12:34:56+09:00');
+        $local = $source->toLocal();
+        $this->assertSame('1999-12-31 19:34:56.000000-08:00', $local->toString());
+        $this->assertNotSame($source, $local);
+    }
+
+    public function test_toUtc(): void
+    {
+        $source = new Time('2000-01-01 12:34:56+09:00');
+        $utc = $source->toUtc();
+        $this->assertSame('2000-01-01 03:34:56.000000Z', $utc->toString());
+        $this->assertNotSame($source, $utc);
     }
 
     public function test_clamp(): void
