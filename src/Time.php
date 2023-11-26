@@ -197,7 +197,8 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
             $mods[]= ($minutes >= 0 ? '+' : '') . "{$minutes} minute";
         }
         if ($seconds !== null) {
-            $mods[]= ($seconds >= 0 ? '+' : '') . "{$seconds} second";
+            $microseconds = (int) ($seconds * 1000000);
+            $mods[]= ($microseconds >= 0 ? '+' : '') . "{$microseconds} microseconds";
         }
         return $this->modify(implode(' ', $mods));
     }
@@ -477,6 +478,12 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public function clamp(?DateTimeInterface $lower = null, ?DateTimeInterface $upper = null): static
     {
+        if ($lower === null && $upper === null) {
+            throw new InvalidArgumentException('At least one of $lower or $upper must be specified.', [
+                'this' => $this,
+            ]);
+        }
+
         if ($lower !== null && $this < $lower) {
             return static::createFromInterface($lower);
         }

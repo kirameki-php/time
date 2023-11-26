@@ -4,10 +4,10 @@ namespace Tests\Kirameki\Time;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\DayOfWeek;
 use Kirameki\Time\Time;
-use function date_default_timezone_get;
 use function date_default_timezone_set;
 use function dump;
 use function json_encode;
@@ -36,6 +36,84 @@ final class TimeTest extends TestCase
         $this->runAfterTearDown(fn() => date_default_timezone_set('UTC'));
 
         $this->assertSame('1999-12-31 19:34:56.000000-08:00', (new Time('2000-01-01 12:34:56+09:00'))->toLocal()->toString());
+    }
+
+    public function test_clamp(): void
+    {
+        // clamp exact
+        $lower = new Time('2000-01-01 12:34:56.000000Z');
+        $upper = clone $lower;
+        $clamped = (new Time('2000-01-01 12:34:56.000002Z'))->clamp($lower, $upper);
+        $this->assertSame($lower->toString(), $clamped->toString(), 'clamp exact');
+        $this->assertSame($upper->toString(), $clamped->toString(), 'clamp exact');
+
+        // in range
+        $source = new Time('2000-01-01 12:34:56.000001Z');
+        $lower = new Time('2000-01-01 12:34:56.000000Z');
+        $upper = new Time('2000-01-01 12:34:56.000002Z');
+        $clamped = $source->clamp($lower, $upper);
+        $this->assertSame($source->toString(), $clamped->toString(), 'in range');
+
+        // clamp upper
+        $lower = new Time('2000-01-01 12:34:56.000000Z');
+        $upper = new Time('2000-01-01 12:34:56.000001Z');
+        $clamped = (new Time('2000-01-01 12:34:56.000002Z'))->clamp($lower, $upper);
+        $this->assertSame($upper->toString(), $clamped->toString(), 'clamp upper');
+
+        // clamp lower
+        $lower = new Time('2000-01-01 12:34:56.000001Z');
+        $upper = new Time('2000-01-01 12:34:56.000002Z');
+        $clamped = (new Time('2000-01-01 12:34:56.000000Z'))->clamp($lower, $upper);
+        $this->assertSame($lower->toString(), $clamped->toString(), 'clamp lower');
+
+        // no upper
+        $source = new Time('2100-01-01 00:00:00Z');
+        $lower = new Time('2000-01-01 12:34:56.000001Z');
+        $clamped = $source->clamp($lower);
+        $this->assertSame($source->toString(), $clamped->toString(), 'clamp lower');
+
+        // no lower
+        $source = new Time('0000-01-01 00:00:00Z');
+        $upper = new Time('2000-01-01 12:34:56.000001Z');
+        $clamped = $source->clamp(null, $upper);
+        $this->assertSame($source->toString(), $clamped->toString(), 'clamp lower');
+    }
+
+    public function test_clamp_no_args(): void
+    {
+        $this->expectExceptionMessage('At least one of $lower or $upper must be specified.');
+        $this->expectException(InvalidArgumentException::class);
+        Time::now()->clamp();
+    }
+
+    public function test_between(): void
+    {
+        $ymdhis = '2000-01-01 12:34:56';
+        $this->assertTrue((new Time($ymdhis . '.000001Z'))->between(new Time($ymdhis . '.000001Z'), new Time($ymdhis . '.000001Z')), 'all same');
+        $this->assertTrue((new Time($ymdhis . '.000001Z'))->between(new Time($ymdhis . '.000000Z'), new Time($ymdhis . '.000001Z')), 'match right');
+        $this->assertTrue((new Time($ymdhis . '.000001Z'))->between(new Time($ymdhis . '.000001Z'), new Time($ymdhis . '.000002Z')), 'match left');
+        $this->assertTrue((new Time($ymdhis . '.000001Z'))->between(new Time($ymdhis . '.000000Z'), new Time($ymdhis . '.000002Z')), 'contained');
+        $this->assertFalse((new Time($ymdhis . '.000001Z'))->between(new Time($ymdhis . '.000002Z'), new Time($ymdhis . '.000000Z')), 'reversed');
+    }
+
+    public function test_isPast(): void
+    {
+        $now = new Time();
+        $this->assertFalse($now->isPast($now));
+
+        $now = new Time();
+        $this->assertFalse($now->addSeconds(0.1)->isPast($now));
+        $this->assertTrue($now->subtractSeconds(0.1)->isPast($now));
+    }
+
+    public function test_isFuture(): void
+    {
+        $now = new Time();
+        $this->assertFalse($now->isFuture($now));
+
+        $now = new Time();
+        $this->assertTrue($now->addSeconds(0.1)->isFuture($now));
+        $this->assertFalse($now->subtractSeconds(0.1)->isFuture($now));
     }
 
     public function test_jsonSerialize(): void
