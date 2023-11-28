@@ -28,6 +28,73 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.111111+09:00', (new Time('2000-01-01 12:34:56.111111+09:00'))->toString());
     }
 
+    public function test_toStartOfYear(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfYear()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 23:59:59.999999Z'))->toStartOfYear()->toString());
+        $this->assertSame('2001-01-01 00:00:00.000000+09:00', (new Time('2001-01-01 12:34:56+09:00'))->toStartOfYear()->toString());
+    }
+
+    public function test_toEndOfYear(): void
+    {
+        $this->assertSame('2000-12-31 23:59:59.999999Z', (new Time('2000-01-01 00:00:00.000000Z'))->toEndOfYear()->toString());
+        $this->assertSame('2001-12-31 23:59:59.999999Z', (new Time('2001-01-01 00:00:00.000000Z'))->toEndOfYear()->toString());
+        $this->assertSame('2001-12-31 23:59:59.999999+09:00', (new Time('2001-01-01 12:34:56+09:00'))->toEndOfYear()->toString());
+    }
+
+    public function test_toStartOfMonth(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfMonth()->toString());
+        $this->assertSame('2000-02-01 00:00:00.000000Z', (new Time('2000-02-29 00:00:00.000000Z'))->toStartOfMonth()->toString());
+        $this->assertSame('2001-03-01 00:00:00.000000Z', (new Time('2001-02-29 00:00:00.000000Z'))->toStartOfMonth()->toString());
+        $this->assertSame('2001-12-01 00:00:00.000000Z', (new Time('2001-12-01 00:00:00.000000Z'))->toStartOfMonth()->toString());
+        $this->assertSame('2000-12-01 00:00:00.000000Z', (new Time('2000-12-31 23:59:59.999999Z'))->toStartOfMonth()->toString());
+        $this->assertSame('2000-12-01 00:00:00.000000+09:00', (new Time('2000-12-01 12:34:56+09:00'))->toStartOfMonth()->toString());
+    }
+
+    public function test_toEndOfMonth(): void
+    {
+        $this->assertSame('2000-01-31 23:59:59.999999Z', (new Time('2000-01-01 00:00:00.000000Z'))->toEndOfMonth()->toString());
+        $this->assertSame('2000-02-29 23:59:59.999999Z', (new Time('2000-02-01 00:00:00.000000Z'))->toEndOfMonth()->toString());
+        $this->assertSame('2001-02-28 23:59:59.999999Z', (new Time('2001-02-01 00:00:00.000000Z'))->toEndOfMonth()->toString());
+        $this->assertSame('2001-03-31 23:59:59.999999Z', (new Time('2001-03-01 00:00:00.000000Z'))->toEndOfMonth()->toString());
+        $this->assertSame('2001-12-31 23:59:59.999999Z', (new Time('2001-12-01 00:00:00.000000Z'))->toEndOfMonth()->toString());
+        $this->assertSame('2000-12-31 23:59:59.999999Z', (new Time('2000-12-31 23:59:59.999999Z'))->toEndOfMonth()->toString());
+        $this->assertSame('2000-12-31 23:59:59.999999+09:00', (new Time('2000-12-01 12:34:56+09:00'))->toEndOfMonth()->toString());
+    }
+
+    public function test_toStartOfDay(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfDay()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 23:59:59.999999Z'))->toStartOfDay()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfDay()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toStartOfDay()->toString());
+    }
+
+    public function test_toEndOfDay(): void
+    {
+        $this->assertSame('2000-01-01 23:59:59.999999Z', (new Time('2000-01-01 00:00:00.000000Z'))->toEndOfDay()->toString());
+        $this->assertSame('2000-01-01 23:59:59.999999Z', (new Time('2000-01-01 23:59:59.999999Z'))->toEndOfDay()->toString());
+        $this->assertSame('2000-01-01 23:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfDay()->toString());
+        $this->assertSame('2000-01-01 23:59:59.999999+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toEndOfDay()->toString());
+    }
+
+    public function test_toStartOfHour(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfHour()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:59:59.999999Z'))->toStartOfHour()->toString());
+        $this->assertSame('2000-01-01 12:00:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfHour()->toString());
+        $this->assertSame('2000-01-01 12:00:00.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toStartOfHour()->toString());
+    }
+
+    public function test_toEndOfHour(): void
+    {
+        $this->assertSame('2000-01-01 00:59:59.999999Z', (new Time('2000-01-01 00:00:00.000000Z'))->toEndOfHour()->toString());
+        $this->assertSame('2000-01-01 00:59:59.999999Z', (new Time('2000-01-01 00:59:59.999999Z'))->toEndOfHour()->toString());
+        $this->assertSame('2000-01-01 12:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfHour()->toString());
+        $this->assertSame('2000-01-01 12:59:59.999999+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toEndOfHour()->toString());
+    }
+
     public function test_toTimezone(): void
     {
         $source = new Time('2000-01-01 12:34:56Z');

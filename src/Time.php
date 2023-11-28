@@ -12,8 +12,11 @@ use Kirameki\Core\Json;
 use Stringable;
 use function date_default_timezone_get;
 use function dump;
+use function floor;
 use function implode;
 use function is_float;
+use function str_pad;
+use const STR_PAD_LEFT;
 
 /**
  * @phpstan-consistent-constructor
@@ -150,16 +153,30 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         ?float $seconds = null
     ): static
     {
-        $parts = explode(' ', $this->format('Y m d H i s u'));
+        $parts = explode(' ', $this->format('Y m d H i s u P'));
 
-        $parts[0] = $years ?? (int) $parts[0];
-        $parts[1] = $months ?? (int) $parts[1];
-        $parts[2] = $days ?? (int) $parts[2];
-        $parts[3] = $hours ?? (int) $parts[3];
-        $parts[4] = $minutes ?? (int) $parts[4];
-        $parts[5] = $seconds ?? (float) ($parts[5].'.'.$parts[6]);
+        if ($years !== null) {
+            $parts[0] = (string) $years;
+        }
+        if ($months !== null) {
+            $parts[1] = str_pad((string) $months, 2, '0', STR_PAD_LEFT);
+        }
+        if ($days !== null) {
+            $parts[2] = str_pad((string) $days, 2, '0', STR_PAD_LEFT);
+        }
+        if ($hours !== null) {
+            $parts[3] = str_pad((string) $hours, 2, '0', STR_PAD_LEFT);
+        }
+        if ($minutes !== null) {
+            $parts[4] = str_pad((string) $minutes, 2, '0', STR_PAD_LEFT);
+        }
+        if ($seconds !== null) {
+            $intSeconds = floor($seconds);
+            $parts[5] = str_pad((string) $intSeconds, 2, '0', STR_PAD_LEFT);
+            $parts[6] = (string) (($seconds - $intSeconds) * 1e6);
+        }
 
-        return static::createFromFormat('Y m d H i s u', implode(' ', $parts));
+        return static::createFromFormat('Y n j G i s u P', implode(' ', $parts));
     }
 
     /**
