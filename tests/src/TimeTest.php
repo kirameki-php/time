@@ -12,12 +12,25 @@ use Kirameki\Time\DayOfWeek;
 use Kirameki\Time\Exceptions\InvalidFormatException;
 use Kirameki\Time\Time;
 use Kirameki\Time\Unit;
+use function date_default_timezone_get;
 use function date_default_timezone_set;
 use function dump;
 use function json_encode;
 
 final class TimeTest extends TestCase
 {
+    private bool $timezoneSet = false;
+
+    protected function setTestTimeZone(string $zone): void
+    {
+        if ($this->timezoneSet === false) {
+            $old = date_default_timezone_get();
+            $this->runAfterTearDown(fn() => date_default_timezone_set($old));
+            $this->timezoneSet = true;
+        }
+        date_default_timezone_set($zone);
+    }
+
     public function test___construct_no_args(): void
     {
         $this->assertSame('UTC', (new Time())->getTimezone()->getName());
@@ -60,7 +73,15 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromFormat('Y m d H i s', '2000 01 01 12 34 56')->toString());
         $this->assertSame('2000-01-01 12:34:56.111000Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111')->toString());
         $this->assertSame('2000-01-01 12:34:56.111111Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
-        $this->assertSame('2000-01-01 21:34:56.000000+09:00', Time::createFromFormat('Y-m-d H:i:s', '2000-01-01 12:34:56', new DateTimeZone('Asia/Tokyo'))->toString());
+        $this->setTestTimeZone('Asia/Tokyo');
+        $this->assertSame('2000-01-01 12:34:56.111111+09:00', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
+    }
+
+    public function test_createFromFormat_no_timezone(): void
+    {
+        $this->expectExceptionMessage('Timezones are not supported as arguments and exists only for compatibility with base class');
+        $this->expectException(InvalidArgumentException::class);
+        Time::createFromFormat('Y-m-d H:i:s', '2000-01-01 12:34:56', new DateTimeZone('America/Los_Angeles'));
     }
 
     public function test_createFromFormat_invalid_format(): void
@@ -79,14 +100,22 @@ final class TimeTest extends TestCase
 
     public function test_createFromMutable(): void
     {
-        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromMutable(new DateTime('2000-01-01 12:34:56Z'))->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000+09:00', Time::createFromMutable(new DateTime('2000-01-01 12:34:56+09:00'))->toString());
+        $timeUtc = Time::createFromMutable(new DateTime('2000-01-01 12:34:56Z'));
+        $this->assertInstanceOf(Time::class, $timeUtc);
+        $this->assertSame('2000-01-01 12:34:56.000000Z', $timeUtc->toString());
+
+        $timeLocal = Time::createFromMutable(new DateTime('2000-01-01 12:34:56+09:00'));
+        $this->assertSame('2000-01-01 12:34:56.000000+09:00', $timeLocal->toString());
     }
 
     public function test_createFromInterface(): void
     {
-        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56'))->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000+09:00', Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56+09:00'))->toString());
+        $timeUtc = Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56Z'));
+        $this->assertInstanceOf(Time::class, $timeUtc);
+        $this->assertSame('2000-01-01 12:34:56.000000Z', $timeUtc->toString());
+
+        $timeLocal = Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56+09:00'));
+        $this->assertSame('2000-01-01 12:34:56.000000+09:00', $timeLocal->toString());
     }
 
     public function test_createFromTimestamp(): void
@@ -96,6 +125,9 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromTimestamp(946730096)->toString());
         $this->assertSame('1900-01-01 00:00:00.000000Z', Time::createFromTimestamp(-2208988800)->toString());
         $this->assertSame('2100-01-01 00:00:00.000000Z', Time::createFromTimestamp(4102444800)->toString());
+
+        $this->setTestTimeZone('Asia/Tokyo');
+        $this->assertSame('1970-01-01 09:00:00.000000+09:00', Time::createFromTimestamp(0)->toString());
     }
 
     public function test_now(): void
@@ -126,6 +158,37 @@ final class TimeTest extends TestCase
         $tomorrow = Time::tomorrow();
         $this->assertInstanceOf(Time::class, $tomorrow);
         $this->assertStringEndsWith($today->format('Y-m-d') . ' 00:00:00.000000Z', $tomorrow->toString());
+    }
+
+    public function test_min(): void
+    {
+        $this->assertSame('0001-01-01 00:00:00.000000Z', Time::min()->toString());
+
+        $this->setTestTimeZone('Asia/Tokyo');
+        $this->assertSame('0001-01-01 00:00:00.000000+09:18', Time::min()->toString());
+    }
+
+    public function test_max(): void
+    {
+        $this->assertSame('9999-12-31 23:59:59.999999Z', Time::max()->toString());
+
+        $this->setTestTimeZone('Asia/Tokyo');
+        $this->assertSame('9999-12-31 23:59:59.999999+09:00', Time::max()->toString());
+    }
+
+    public function test_set(): void
+    {
+        $now = new Time('2000-01-01 12:34:56Z');
+        $this->assertSame('2000-01-01 12:34:56.000000Z', $now->set(years: 2000)->toString());
+        $this->assertSame('2000-02-01 12:34:56.000000Z', $now->set(months: 2)->toString());
+        $this->assertSame('2000-01-02 12:34:56.000000Z', $now->set(days: 2)->toString());
+        $this->assertSame('2000-01-01 11:34:56.000000Z', $now->set(hours: 11)->toString());
+        $this->assertSame('2000-01-01 12:11:56.000000Z', $now->set(minutes: 11)->toString());
+        $this->assertSame('2000-01-01 12:34:12.345678Z', $now->set(seconds: 12.345678)->toString());
+        $this->assertSame('2000-01-01 12:35:01.000000Z', $now->set(seconds: 61)->toString());
+        $this->assertSame('2000-01-01 12:35:01.123000Z', $now->set(seconds: 61.123)->toString());
+        $this->assertSame('2000-01-01 12:35:01.123456Z', $now->set(seconds: 61.123456)->toString());
+        $this->assertSame('0001-01-01 00:00:00.000000Z', $now->set(1, 1, 1, 0, 0, 0)->toString(), 'all');
     }
 
     public function test_toStartOfUnit(): void

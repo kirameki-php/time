@@ -8,6 +8,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
+use Kirameki\Core\Exceptions\UnreachableException;
 use Kirameki\Time\Exceptions\InvalidFormatException;
 use Stringable;
 use function assert;
@@ -27,7 +28,8 @@ use const STR_PAD_LEFT;
 class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 {
     public const string RFC3339_HUMAN = 'Y-m-d H:i:s.up';
-    public const string RFC3339_FULL = 'Y-m-d\\TH:i:s.up';
+    public const string MIN = '0001-01-01 00:00:00.000000';
+    public const string MAX = '9999-12-31 23:59:59.999999';
 
     # region Creation --------------------------------------------------------------------------------------------------
 
@@ -60,6 +62,14 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
     {
+        if ($timezone !== null) {
+            throw new InvalidArgumentException('Timezones are not supported as arguments and exists only for compatibility with base class.', [
+                'format' => $format,
+                'datetime' => $datetime,
+                'timezone' => $timezone,
+            ]);
+        }
+
         $base = DateTime::createFromFormat($format, $datetime);
 
         // NOTE: Invalid dates (ex: Feb 30th) can slip through, so we handle that here
@@ -67,13 +77,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
             $errors = DateTime::getLastErrors();
             assert($errors !== false);
             static::throwLastError($errors, $datetime);
-        }
-
-        // NOTE: In DateTime class the timezone parameter and the current timezone are ignored when the time parameter
-        // either contains a UNIX timestamp (e.g. 946684800) or specifies a timezone (e.g. 2010-01-28T15:00:00+02:00)
-        // so we have to use setTimezone($timezone) to do the job.
-        if ($timezone !== null) {
-            $base = $base->setTimezone($timezone);
         }
 
         return static::createFromInterface($base);
@@ -92,7 +95,8 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromInterface(DateTimeInterface $object): static
     {
-        return new static($object->format(self::RFC3339_FULL));
+        /** @var static */
+        return parent::createFromInterface($object);
     }
 
     /**
@@ -101,7 +105,19 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromTimestamp(int|float $timestamp): static
     {
-        return static::createFromFormat('U.u', number_format($timestamp, 6, '.', ''));
+        $formatted = number_format($timestamp, 6, '.', '');
+        $base = DateTime::createFromFormat('U.u', $formatted);
+
+        if ($base !== false) {
+            $base->setTimezone(static::getCurrentTimeZone());
+            return static::createFromInterface($base);
+        }
+
+        // @codeCoverageIgnoreStart
+        throw new UnreachableException('Failed to create DateTime from timestamp.', [
+            'timestamp' => $timestamp,
+        ]);
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -134,6 +150,27 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public static function tomorrow(): static
     {
         return new static('tomorrow');
+    }
+
+    /**
+     * @return static
+     */
+    public static function min(): static
+    {
+        return static::parse(self::MIN);
+    }
+
+    /**
+     * @return static
+     */
+    public static function max(): static
+    {
+        return static::parse(self::MAX);
+    }
+
+    protected static function getCurrentTimeZone(): DateTimeZone
+    {
+        return new DateTimeZone(date_default_timezone_get());
     }
 
     /**
