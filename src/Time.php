@@ -385,8 +385,8 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
             Unit::Month => $this->toStartOfMonth(),
             Unit::Day => $this->toStartOfDay(),
             Unit::Hour => $this->toStartOfHour(),
-            Unit::Minute => $this->set(seconds: 0),
-            Unit::Second => $this->set(seconds: (int) $this->getSeconds()),
+            Unit::Minute => $this->toStartOfMinute(),
+            Unit::Second => $this->toStartOfSecond(),
         };
     }
 
@@ -397,8 +397,8 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
             Unit::Month => $this->toEndOfMonth(),
             Unit::Day => $this->toEndOfDay(),
             Unit::Hour => $this->toEndOfHour(),
-            Unit::Minute => $this->set(seconds: 59.999999),
-            Unit::Second => $this->set(seconds: ((int) $this->getSeconds()) + 0.999999),
+            Unit::Minute => $this->toEndOfMinute(),
+            Unit::Second => $this->toEndOfSecond(),
         };
     }
 
@@ -464,6 +464,38 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public function toEndOfHour(): static
     {
         return $this->set(minutes: 59, seconds: 59.999999);
+    }
+
+    /**
+     * @return static
+     */
+    public function toStartOfMinute(): static
+    {
+        return $this->set(seconds: 0);
+    }
+
+    /**
+     * @return static
+     */
+    public function toEndOfMinute(): static
+    {
+        return $this->set(seconds: 59.999999);
+    }
+
+    /**
+     * @return static
+     */
+    public function toStartOfSecond(): static
+    {
+        return $this->set(seconds: (int) $this->getSeconds());
+    }
+
+    /**
+     * @return static
+     */
+    public function toEndOfSecond(): static
+    {
+        return $this->set(seconds: ((int) $this->getSeconds()) + 0.999999);
     }
 
     /**

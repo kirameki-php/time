@@ -7,6 +7,7 @@ use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\DayOfWeek;
 use Kirameki\Time\Time;
+use Kirameki\Time\Unit;
 use function date_default_timezone_set;
 use function dump;
 use function json_encode;
@@ -26,6 +27,26 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toString());
         $this->assertSame('2000-01-01 12:34:56.111000+09:00', (new Time('2000-01-01 12:34:56.111+09:00'))->toString());
         $this->assertSame('2000-01-01 12:34:56.111111+09:00', (new Time('2000-01-01 12:34:56.111111+09:00'))->toString());
+    }
+
+    public function test_toStartOfUnit(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Second)->toString());
+        $this->assertSame('2000-01-01 12:34:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Minute)->toString());
+        $this->assertSame('2000-01-01 12:00:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Hour)->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Day)->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Month)->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Year)->toString());
+    }
+
+    public function test_toEndOfUnit(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfUnit(Unit::Second)->toString());
+        $this->assertSame('2000-01-01 12:34:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfUnit(Unit::Minute)->toString());
+        $this->assertSame('2000-01-01 12:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfUnit(Unit::Hour)->toString());
+        $this->assertSame('2000-01-01 23:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfUnit(Unit::Day)->toString());
+        $this->assertSame('2000-01-31 23:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfUnit(Unit::Month)->toString());
+        $this->assertSame('2000-12-31 23:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfUnit(Unit::Year)->toString());
     }
 
     public function test_toStartOfYear(): void
@@ -93,6 +114,38 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 00:59:59.999999Z', (new Time('2000-01-01 00:59:59.999999Z'))->toEndOfHour()->toString());
         $this->assertSame('2000-01-01 12:59:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfHour()->toString());
         $this->assertSame('2000-01-01 12:59:59.999999+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toEndOfHour()->toString());
+    }
+
+    public function test_toStartOfMinute(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfMinute()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:59.999999Z'))->toStartOfMinute()->toString());
+        $this->assertSame('2000-01-01 12:34:00.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfMinute()->toString());
+        $this->assertSame('2000-01-01 12:34:00.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toStartOfMinute()->toString());
+    }
+
+    public function test_toEndOfMinute(): void
+    {
+        $this->assertSame('2000-01-01 00:00:59.999999Z', (new Time('2000-01-01 00:00:00.000000Z'))->toEndOfMinute()->toString());
+        $this->assertSame('2000-01-01 00:00:59.999999Z', (new Time('2000-01-01 00:00:59.999999Z'))->toEndOfMinute()->toString());
+        $this->assertSame('2000-01-01 12:34:59.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfMinute()->toString());
+        $this->assertSame('2000-01-01 12:34:59.999999+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toEndOfMinute()->toString());
+    }
+
+    public function test_toStartOfSecond(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfSecond()->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.999999Z'))->toStartOfSecond()->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfSecond()->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toStartOfSecond()->toString());
+    }
+
+    public function test_toEndOfSecond(): void
+    {
+        $this->assertSame('2000-01-01 00:00:00.999999Z', (new Time('2000-01-01 00:00:00.000000Z'))->toEndOfSecond()->toString());
+        $this->assertSame('2000-01-01 00:00:00.999999Z', (new Time('2000-01-01 00:00:00.999999Z'))->toEndOfSecond()->toString());
+        $this->assertSame('2000-01-01 12:34:56.999999Z', (new Time('2000-01-01 12:34:56Z'))->toEndOfSecond()->toString());
+        $this->assertSame('2000-01-01 12:34:56.999999+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toEndOfSecond()->toString());
     }
 
     public function test_toTimezone(): void
