@@ -74,7 +74,9 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.111000Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111')->toString());
         $this->assertSame('2000-01-01 12:34:56.111111Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
         $this->setTestTimeZone('Asia/Tokyo');
-        $this->assertSame('2000-01-01 12:34:56.111111+09:00', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
+        $time = Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111');
+        $this->assertInstanceOf(Time::class, $time);
+        $this->assertSame('2000-01-01 12:34:56.111111+09:00', $time->toString());
     }
 
     public function test_createFromFormat_no_timezone(): void

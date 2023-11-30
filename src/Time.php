@@ -70,16 +70,16 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
             ]);
         }
 
-        $base = DateTime::createFromFormat($format, $datetime);
+        $instance = parent::createFromFormat($format, $datetime);
 
         // NOTE: Invalid dates (ex: Feb 30th) can slip through, so we handle that here
-        if ($base === false) {
+        if ($instance === false) {
             $errors = DateTime::getLastErrors();
             assert($errors !== false);
             static::throwLastError($errors, $datetime);
         }
 
-        return static::createFromInterface($base);
+        return $instance;
     }
 
     /**
