@@ -8,13 +8,16 @@ use DateTimeInterface;
 use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
-use Kirameki\Core\Json;
+use Kirameki\Time\Exceptions\InvalidFormatException;
 use Stringable;
+use function assert;
 use function date_default_timezone_get;
-use function dump;
+use function explode;
 use function floor;
 use function implode;
+use function in_array;
 use function is_float;
+use function number_format;
 use function str_pad;
 use const STR_PAD_LEFT;
 
@@ -23,8 +26,8 @@ use const STR_PAD_LEFT;
  */
 class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 {
-    public const RFC3339_HUMAN = 'Y-m-d H:i:s.up';
-    public const RFC3339_FULL = 'Y-m-d\\TH:i:s.up';
+    public const string RFC3339_HUMAN = 'Y-m-d H:i:s.up';
+    public const string RFC3339_FULL = 'Y-m-d\\TH:i:s.up';
 
     # region Creation --------------------------------------------------------------------------------------------------
 
@@ -33,7 +36,14 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public function __construct(?string $datetime = null)
     {
-        parent::__construct($datetime ?? 'now');
+        $datetime ??= 'now';
+
+        parent::__construct($datetime);
+
+        $errors = DateTime::getLastErrors();
+        if ($errors !== false) {
+            static::throwLastError($errors, $datetime);
+        }
     }
 
     /**
@@ -50,25 +60,20 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
     {
-        /** @var DateTime $base */
         $base = DateTime::createFromFormat($format, $datetime);
+
+        // NOTE: Invalid dates (ex: Feb 30th) can slip through, so we handle that here
+        if ($base === false) {
+            $errors = DateTime::getLastErrors();
+            assert($errors !== false);
+            static::throwLastError($errors, $datetime);
+        }
 
         // NOTE: In DateTime class the timezone parameter and the current timezone are ignored when the time parameter
         // either contains a UNIX timestamp (e.g. 946684800) or specifies a timezone (e.g. 2010-01-28T15:00:00+02:00)
         // so we have to use setTimezone($timezone) to do the job.
         if ($timezone !== null) {
             $base = $base->setTimezone($timezone);
-        }
-
-        // NOTE: Invalid dates (ex: Feb 30th) can slip through, so we handle that here
-        // https://www.php.net/manual/en/datetime.getlasterrors.php#102686
-        $errors = DateTime::getLastErrors();
-        if ($errors !== false && $errors['error_count'] + $errors['warning_count'] === 0) {
-            throw new InvalidArgumentException(Json::encode($errors), [
-                'format' => $format,
-                'datetime' => $datetime,
-                'timezone' => $timezone,
-            ]);
         }
 
         return static::createFromInterface($base);
@@ -129,6 +134,18 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public static function tomorrow(): static
     {
         return new static('tomorrow');
+    }
+
+    /**
+     * @param array{errors: list<string>, warnings: list<string>} $errors
+     * @param string $datetime
+     * @return never
+     */
+    protected static function throwLastError(array $errors, string $datetime): never
+    {
+        throw new InvalidFormatException($errors, [
+            'datetime' => $datetime,
+        ]);
     }
 
     # endregion Creation -----------------------------------------------------------------------------------------------

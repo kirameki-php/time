@@ -2,10 +2,14 @@
 
 namespace Tests\Kirameki\Time;
 
+use DateMalformedStringException;
+use DateTime;
 use DateTimeImmutable;
+use DateTimeZone;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\DayOfWeek;
+use Kirameki\Time\Exceptions\InvalidFormatException;
 use Kirameki\Time\Time;
 use Kirameki\Time\Unit;
 use function date_default_timezone_set;
@@ -27,6 +31,101 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toString());
         $this->assertSame('2000-01-01 12:34:56.111000+09:00', (new Time('2000-01-01 12:34:56.111+09:00'))->toString());
         $this->assertSame('2000-01-01 12:34:56.111111+09:00', (new Time('2000-01-01 12:34:56.111111+09:00'))->toString());
+    }
+
+    public function test_parse(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::parse('2000-01-01 12:34:56Z')->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000+09:00', Time::parse('2000-01-01 12:34:56+09:00')->toString());
+        $this->assertSame('2000-01-01 12:34:56.111000+09:00', Time::parse('2000-01-01 12:34:56.111+09:00')->toString());
+        $this->assertSame('2000-01-01 12:34:56.111111+09:00', Time::parse('2000-01-01 12:34:56.111111+09:00')->toString());
+    }
+
+    public function test_parse_invalid_format(): void
+    {
+        $this->expectExceptionMessage('Failed to parse time string (abc) at position 0 (a): The timezone could not be found in the database');
+        $this->expectException(DateMalformedStringException::class);
+        Time::parse('abc')->toString();
+    }
+
+    public function test_parse_invalid_date_warning_thrown(): void
+    {
+        $this->expectExceptionMessage('Invalid format: ["The parsed date was invalid"]');
+        $this->expectException(InvalidFormatException::class);
+        Time::parse('Feb 30th')->toString();
+    }
+
+    public function test_createFromFormat(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromFormat('Y m d H i s', '2000 01 01 12 34 56')->toString());
+        $this->assertSame('2000-01-01 12:34:56.111000Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111')->toString());
+        $this->assertSame('2000-01-01 12:34:56.111111Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
+        $this->assertSame('2000-01-01 21:34:56.000000+09:00', Time::createFromFormat('Y-m-d H:i:s', '2000-01-01 12:34:56', new DateTimeZone('Asia/Tokyo'))->toString());
+    }
+
+    public function test_createFromFormat_invalid_format(): void
+    {
+        $this->expectExceptionMessage('["A four digit year could not be found","Not enough data available to satisfy format"]');
+        $this->expectException(InvalidArgumentException::class);
+        Time::createFromFormat('Y-m-d H:i:s.u', 'abc')->toString();
+    }
+
+    public function test_createFromFormat_invalid_format_trailing_data(): void
+    {
+        $this->expectExceptionMessage('["Trailing data"]');
+        $this->expectException(InvalidArgumentException::class);
+        Time::createFromFormat('Y', '2001-')->toString();
+    }
+
+    public function test_createFromMutable(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromMutable(new DateTime('2000-01-01 12:34:56Z'))->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000+09:00', Time::createFromMutable(new DateTime('2000-01-01 12:34:56+09:00'))->toString());
+    }
+
+    public function test_createFromInterface(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56'))->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000+09:00', Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56+09:00'))->toString());
+    }
+
+    public function test_createFromTimestamp(): void
+    {
+        $this->assertSame('1970-01-01 00:00:00.000000Z', Time::createFromTimestamp(0)->toString());
+        $this->assertSame('1970-01-01 00:00:01.234567Z', Time::createFromTimestamp(1.234567)->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromTimestamp(946730096)->toString());
+        $this->assertSame('1900-01-01 00:00:00.000000Z', Time::createFromTimestamp(-2208988800)->toString());
+        $this->assertSame('2100-01-01 00:00:00.000000Z', Time::createFromTimestamp(4102444800)->toString());
+    }
+
+    public function test_now(): void
+    {
+        $now = Time::now();
+        $this->assertInstanceOf(Time::class, $now);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{6}Z$/', $now->toString());
+    }
+
+    public function test_today(): void
+    {
+        $today = Time::today();
+        $this->assertInstanceOf(Time::class, $today);
+        $this->assertStringEndsWith('00:00:00.000000Z', $today->toString());
+    }
+
+    public function test_yesterday(): void
+    {
+        $today = Time::today()->subtractDays(1);
+        $yesterday = Time::yesterday();
+        $this->assertInstanceOf(Time::class, $yesterday);
+        $this->assertStringEndsWith($today->format('Y-m-d') . ' 00:00:00.000000Z', $yesterday->toString());
+    }
+
+    public function test_tomorrow(): void
+    {
+        $today = Time::today()->addDays(1);
+        $tomorrow = Time::tomorrow();
+        $this->assertInstanceOf(Time::class, $tomorrow);
+        $this->assertStringEndsWith($today->format('Y-m-d') . ' 00:00:00.000000Z', $tomorrow->toString());
     }
 
     public function test_toStartOfUnit(): void
@@ -67,7 +166,6 @@ final class TimeTest extends TestCase
     {
         $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00.000000Z'))->toStartOfMonth()->toString());
         $this->assertSame('2000-02-01 00:00:00.000000Z', (new Time('2000-02-29 00:00:00.000000Z'))->toStartOfMonth()->toString());
-        $this->assertSame('2001-03-01 00:00:00.000000Z', (new Time('2001-02-29 00:00:00.000000Z'))->toStartOfMonth()->toString());
         $this->assertSame('2001-12-01 00:00:00.000000Z', (new Time('2001-12-01 00:00:00.000000Z'))->toStartOfMonth()->toString());
         $this->assertSame('2000-12-01 00:00:00.000000Z', (new Time('2000-12-31 23:59:59.999999Z'))->toStartOfMonth()->toString());
         $this->assertSame('2000-12-01 00:00:00.000000+09:00', (new Time('2000-12-01 12:34:56+09:00'))->toStartOfMonth()->toString());
