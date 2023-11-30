@@ -4,3 +4,8 @@ parameters:
         - src/
     excludePaths:
         - tests/*
+    ignoreErrors:
+        -
+            message: "#^Method Kirameki\\\\Time\\\\Time\\:\\:createFromInterface\\(\\) should return static\\(Kirameki\\\\Time\\\\Time\\) but returns DateTimeImmutable\\.$#"
+            count: 1
+            path: src/Time.php

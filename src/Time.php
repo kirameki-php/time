@@ -95,7 +95,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromInterface(DateTimeInterface $object): static
     {
-        /** @var static */
         return parent::createFromInterface($object);
     }
 
