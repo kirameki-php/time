@@ -193,6 +193,22 @@ final class TimeTest extends TestCase
         $this->assertSame('0001-01-01 00:00:00.000000Z', $now->set(1, 1, 1, 0, 0, 0)->toString(), 'all');
     }
 
+    public function test_addUnitWithClamping(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->addUnitWithClamping(Unit::Second, 0, Unit::Second)->toString());
+        $this->assertSame('2000-01-01 00:00:00.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Second, 61, Unit::Second)->toString());
+        $this->assertSame('2000-01-01 00:00:59.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Second, 59, Unit::Minute)->toString());
+        $this->assertSame('2000-01-01 00:00:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Second, 61, Unit::Minute)->toString());
+        $this->assertSame('2000-01-01 00:59:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Minute, 59, Unit::Hour)->toString());
+        $this->assertSame('2000-01-01 00:59:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Minute, 61, Unit::Hour)->toString());
+        $this->assertSame('2000-01-01 23:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Hour, 23, Unit::Day)->toString());
+        $this->assertSame('2000-01-01 23:59:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Hour, 25, Unit::Day)->toString());
+        $this->assertSame('2000-01-31 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Day, 30, Unit::Month)->toString());
+        $this->assertSame('2000-01-31 23:59:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Day, 31, Unit::Month)->toString());
+        $this->assertSame('2000-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Month, 11, Unit::Year)->toString());
+        $this->assertSame('2000-12-31 23:59:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Month, 12, Unit::Year)->toString());
+    }
+
     public function test_toStartOfUnit(): void
     {
         $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->toStartOfUnit(Unit::Second)->toString());

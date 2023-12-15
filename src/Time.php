@@ -420,14 +420,17 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         $original = clone $this;
 
         $added = $this->addUnit($unit, $value);
-        $start = $original->toStartOfUnit($clamp);
-        $end = $original->toEndOfUnit($clamp);
 
+        $start = $original->toStartOfUnit($clamp);
         if ($added < $start) {
             return $start;
-        } elseif ($added > $end) {
+        }
+
+        $end = $original->toEndOfUnit($clamp);
+        if ($added > $end) {
             return $end;
         }
+
         return $added;
     }
 
