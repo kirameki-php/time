@@ -12,6 +12,7 @@ use Kirameki\Time\DayOfWeek;
 use Kirameki\Time\Exceptions\InvalidFormatException;
 use Kirameki\Time\Time;
 use Kirameki\Time\Unit;
+use PHPUnit\Framework\Attributes\DataProvider;
 use function date_default_timezone_get;
 use function date_default_timezone_set;
 use function dump;
@@ -193,6 +194,44 @@ final class TimeTest extends TestCase
         $this->assertSame('0001-01-01 00:00:00.000000Z', $now->set(1, 1, 1, 0, 0, 0)->toString(), 'all');
     }
 
+    public function test_addUnit(): void
+    {
+        $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->addUnit(Unit::Second, 0)->toString());
+        $this->assertSame('2000-01-01 00:00:00.123000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Second, 0.123)->toString());
+        $this->assertSame('2000-01-01 00:00:59.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Second, 59)->toString());
+        $this->assertSame('2000-01-01 00:01:01.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Second, 61)->toString());
+        $this->assertSame('2000-01-01 00:59:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Minute, 59)->toString());
+        $this->assertSame('2000-01-01 01:01:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Minute, 61)->toString());
+        $this->assertSame('2000-01-01 23:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Hour, 23)->toString());
+        $this->assertSame('2000-01-02 01:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Hour, 25)->toString());
+        $this->assertSame('2000-01-31 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Day, 30)->toString());
+        $this->assertSame('2000-02-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Day, 31)->toString());
+        $this->assertSame('2000-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Month, 11)->toString());
+        $this->assertSame('2001-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnit(Unit::Month, 12)->toString());
+    }
+
+    /**
+     * @return list<list<Unit::*>>
+     */
+    public static function nonFractionalUnitsDataProvider(): array
+    {
+        return [
+            [Unit::Minute],
+            [Unit::Hour],
+            [Unit::Day],
+            [Unit::Month],
+            [Unit::Year],
+        ];
+    }
+
+    #[DataProvider('nonFractionalUnitsDataProvider')]
+    public function test_addUnit_float_for_non_second(Unit $unit): void
+    {
+        $this->expectExceptionMessage('Only seconds can be fractional.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time())->addUnit($unit, 0.123)->toString();
+    }
+
     public function test_addUnitWithClamping(): void
     {
         $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->addUnitWithClamping(Unit::Second, 0, Unit::Second)->toString());
@@ -207,6 +246,14 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-31 23:59:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Day, 31, Unit::Month)->toString());
         $this->assertSame('2000-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Month, 11, Unit::Year)->toString());
         $this->assertSame('2000-12-31 23:59:59.999999Z', (new Time('2000-01-01 00:00:00Z'))->addUnitWithClamping(Unit::Month, 12, Unit::Year)->toString());
+    }
+
+    #[DataProvider('nonFractionalUnitsDataProvider')]
+    public function test_addUnitWithClamping_float_for_non_second(Unit $unit): void
+    {
+        $this->expectExceptionMessage('Only seconds can be fractional.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time())->addUnitWithClamping($unit, 0.123, Unit::Year)->toString();
     }
 
     public function test_toStartOfUnit(): void

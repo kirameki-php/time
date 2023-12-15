@@ -12,6 +12,7 @@ use Kirameki\Core\Exceptions\UnreachableException;
 use Kirameki\Time\Exceptions\InvalidFormatException;
 use Stringable;
 use function assert;
+use function compact;
 use function date_default_timezone_get;
 use function explode;
 use function floor;
@@ -203,7 +204,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         ?int $days = null,
         ?int $hours = null,
         ?int $minutes = null,
-        ?float $seconds = null
+        ?float $seconds = null,
     ): static
     {
         $parts = explode(' ', $this->format('Y m d H i s u P'));
@@ -247,7 +248,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         ?int $days = null,
         ?int $hours = null,
         ?int $minutes = null,
-        int|float|null $seconds = null
+        int|float|null $seconds = null,
     ): static
     {
         $mods = [];
@@ -274,22 +275,22 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
-     * @param int $years
+     * @param int $amount
      * @return static
      */
-    public function addYears(int $years): static
+    public function addYears(int $amount): static
     {
-        return $this->shift(years: $years);
+        return $this->shift(years: static::ensurePositive($amount));
     }
 
     /**
-     * @param int $months
+     * @param int $amount
      * @param bool $overflow
      * @return static
      */
-    public function addMonths(int $months, bool $overflow = true): static
+    public function addMonths(int $amount, bool $overflow = true): static
     {
-        $added = $this->shift(months: $months);
+        $added = $this->shift(months: static::ensurePositive($amount));
 
         if (!$overflow) {
             if ($added->getDay() === $this->getDay()) {
@@ -304,122 +305,122 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
-     * @param int $days
+     * @param int $amount
      * @return static
      */
-    public function addDays(int $days): static
+    public function addDays(int $amount): static
     {
-        return $this->shift(days: $days);
+        return $this->shift(days: static::ensurePositive($amount));
     }
 
     /**
-     * @param int $hours
+     * @param int $amount
      * @return static
      */
-    public function addHours(int $hours): static
+    public function addHours(int $amount): static
     {
-        return $this->shift(hours: $hours);
+        return $this->shift(hours: static::ensurePositive($amount));
     }
 
     /**
-     * @param int $minutes
+     * @param int $amount
      * @return static
      */
-    public function addMinutes(int $minutes): static
+    public function addMinutes(int $amount): static
     {
-        return $this->shift(minutes: $minutes);
+        return $this->shift(minutes: static::ensurePositive($amount));
     }
 
     /**
-     * @param int|float $seconds
+     * @param int|float $amount
      * @return static
      */
-    public function addSeconds(int|float $seconds): static
+    public function addSeconds(int|float $amount): static
     {
-        return $this->shift(seconds: $seconds);
+        return $this->shift(seconds: static::ensurePositive($amount));
     }
 
     /**
-     * @param int $years
+     * @param int $amount
      * @return static
      */
-    public function subtractYears(int $years): static
+    public function subtractYears(int $amount): static
     {
-        return $this->shift(years: -$years);
+        return $this->shift(years: -static::ensurePositive($amount));
     }
 
     /**
-     * @param int $months
+     * @param int $amount
      * @return static
      */
-    public function subtractMonths(int $months): static
+    public function subtractMonths(int $amount): static
     {
-        return $this->shift(months: -$months);
+        return $this->shift(months: -static::ensurePositive($amount));
     }
 
     /**
-     * @param int $days
+     * @param int $amount
      * @return static
      */
-    public function subtractDays(int $days): static
+    public function subtractDays(int $amount): static
     {
-        return $this->shift(days: -$days);
+        return $this->shift(days: -static::ensurePositive($amount));
     }
 
     /**
-     * @param int $hours
+     * @param int $amount
      * @return static
      */
-    public function subtractHours(int $hours): static
+    public function subtractHours(int $amount): static
     {
-        return $this->shift(hours: -$hours);
+        return $this->shift(hours: -static::ensurePositive($amount));
     }
 
     /**
-     * @param int $minutes
+     * @param int $amount
      * @return static
      */
-    public function subtractMinutes(int $minutes): static
+    public function subtractMinutes(int $amount): static
     {
-        return $this->shift(minutes: -$minutes);
+        return $this->shift(minutes: -static::ensurePositive($amount));
     }
 
     /**
-     * @param int|float $seconds
+     * @param int|float $amount
      * @return static
      */
-    public function subtractSeconds(int|float $seconds): static
+    public function subtractSeconds(int|float $amount): static
     {
-        return $this->shift(seconds: -$seconds);
+        return $this->shift(seconds: -static::ensurePositive($amount));
     }
 
-    public function addUnit(Unit $unit, int|float $value): static
+    public function addUnit(Unit $unit, int|float $amount): static
     {
-        if (is_float($value)) {
+        if (is_float($amount)) {
             return match ($unit) {
-                Unit::Second => $this->addSeconds($value),
-                default => throw new InvalidArgumentException('Only seconds can be a float.', [
+                Unit::Second => $this->addSeconds($amount),
+                default => throw new InvalidArgumentException('Only seconds can be fractional.', [
                     'unit' => $unit,
-                    'value' => $value,
+                    'amount' => $amount,
                 ]),
             };
         }
 
         return match ($unit) {
-            Unit::Year => $this->addYears($value),
-            Unit::Month => $this->addMonths($value),
-            Unit::Day => $this->addDays($value),
-            Unit::Hour => $this->addHours($value),
-            Unit::Minute => $this->addMinutes($value),
-            Unit::Second => $this->addSeconds($value),
+            Unit::Year => $this->addYears($amount),
+            Unit::Month => $this->addMonths($amount),
+            Unit::Day => $this->addDays($amount),
+            Unit::Hour => $this->addHours($amount),
+            Unit::Minute => $this->addMinutes($amount),
+            Unit::Second => $this->addSeconds($amount),
         };
     }
 
-    public function addUnitWithClamping(Unit $unit, int|float $value, Unit $clamp): static
+    public function addUnitWithClamping(Unit $unit, int|float $amount, Unit $clamp): static
     {
         $original = clone $this;
 
-        $added = $this->addUnit($unit, $value);
+        $added = $this->addUnit($unit, $amount);
 
         $start = $original->toStartOfUnit($clamp);
         if ($added < $start) {
@@ -873,4 +874,19 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     # endregion Zone ---------------------------------------------------------------------------------------------------
+
+    /**
+     * @template TNum of int|float
+     * @param TNum $amount
+     * @return TNum
+     */
+    protected static function ensurePositive(int|float $amount): int|float
+    {
+        if ($amount < 0) {
+            throw new InvalidArgumentException('$amount must be positive.', [
+                'amount' => $amount,
+            ]);
+        }
+        return $amount;
+    }
 }
