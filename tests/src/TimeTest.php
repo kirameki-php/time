@@ -194,6 +194,75 @@ final class TimeTest extends TestCase
         $this->assertSame('0001-01-01 00:00:00.000000Z', $now->set(1, 1, 1, 0, 0, 0)->toString(), 'all');
     }
 
+    public function test_subtractMonths(): void
+    {
+        $this->assertSame('1999-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMonths(1)->toString());
+        $this->assertSame('1999-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMonths(12)->toString());
+        $this->assertSame('1998-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMonths(13)->toString());
+    }
+
+    public function test_subtractMonths_with_negative_value(): void
+    {
+        $this->expectExceptionMessage('$amount must be positive.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time('2000-01-01 00:00:00Z'))->subtractMonths(-1);
+    }
+
+    public function test_subtractDays(): void
+    {
+        $this->assertSame('1999-12-31 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractDays(1)->toString());
+        $this->assertSame('1999-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractDays(31)->toString());
+        $this->assertSame('1999-11-30 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractDays(32)->toString());
+    }
+
+    public function test_subtractDays_with_negative_value(): void
+    {
+        $this->expectExceptionMessage('$amount must be positive.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time('2000-01-01 00:00:00Z'))->subtractDays(-1);
+    }
+
+    public function test_subtractHours(): void
+    {
+        $this->assertSame('1999-12-31 23:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractHours(1)->toString());
+        $this->assertSame('1999-12-31 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractHours(24)->toString());
+        $this->assertSame('1999-12-30 23:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractHours(25)->toString());
+    }
+
+    public function test_subtractHours_with_negative_value(): void
+    {
+        $this->expectExceptionMessage('$amount must be positive.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time('2000-01-01 00:00:00Z'))->subtractHours(-1);
+    }
+
+    public function test_subtractMinutes(): void
+    {
+        $this->assertSame('1999-12-31 23:59:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMinutes(1)->toString());
+        $this->assertSame('1999-12-31 23:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMinutes(60)->toString());
+    }
+
+    public function test_subtractMinutes_with_negative_value(): void
+    {
+        $this->expectExceptionMessage('$amount must be positive.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time('2000-01-01 00:00:00Z'))->subtractMinutes(-1);
+    }
+
+    public function test_subtractSeconds(): void
+    {
+        $this->assertSame('1999-12-31 23:59:59.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractSeconds(1)->toString());
+        $this->assertSame('1999-12-31 23:59:59.100000Z', (new Time('2000-01-01 00:00:00Z'))->subtractSeconds(0.9)->toString());
+        $this->assertSame('1999-12-31 23:59:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractSeconds(60)->toString());
+    }
+
+    public function test_subtractSeconds_with_negative_value(): void
+    {
+        $this->expectExceptionMessage('$amount must be positive.');
+        $this->expectException(InvalidArgumentException::class);
+        (new Time('2000-01-01 00:00:00Z'))->subtractSeconds(-1);
+    }
+
     public function test_addUnit(): void
     {
         $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->addUnit(Unit::Second, 0)->toString());
