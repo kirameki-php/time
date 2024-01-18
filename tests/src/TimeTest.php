@@ -15,7 +15,6 @@ use Kirameki\Time\Unit;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function date_default_timezone_get;
 use function date_default_timezone_set;
-use function dump;
 use function json_encode;
 
 final class TimeTest extends TestCase

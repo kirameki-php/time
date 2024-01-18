@@ -2,21 +2,10 @@
 
 namespace Tests\Kirameki\Time;
 
-use DateMalformedStringException;
-use DateTime;
-use DateTimeImmutable;
 use DateTimeZone;
-use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\Clock;
-use Kirameki\Time\DayOfWeek;
-use Kirameki\Time\Exceptions\InvalidFormatException;
 use Kirameki\Time\Time;
-use Kirameki\Time\Unit;
-use PHPUnit\Framework\Attributes\DataProvider;
-use function date_default_timezone_get;
-use function date_default_timezone_set;
-use function json_encode;
 use function microtime;
 
 final class ClockTest extends TestCase
@@ -35,7 +24,9 @@ final class ClockTest extends TestCase
     public function test_isFixed(): void
     {
         $this->assertFalse((new Clock())->isFixed());
-        $this->assertTrue((new Clock(fixed: new Time('2000-01-01')))->isFixed());
+
+        $now = new Time('2000-01-01');
+        $this->assertTrue((new Clock(fixed: $now))->isFixed());
     }
 
     public function test_now(): void
