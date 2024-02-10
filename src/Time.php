@@ -274,6 +274,49 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
+     * @param Unit $unit
+     * @param int|float $amount
+     * @return static
+     */
+    public function addUnit(Unit $unit, int|float $amount): static
+    {
+        if (is_float($amount)) {
+            return match ($unit) {
+                Unit::Second => $this->addSeconds($amount),
+                default => throw new InvalidArgumentException('Only seconds can be fractional.', [
+                    'unit' => $unit,
+                    'amount' => $amount,
+                ]),
+            };
+        }
+
+        return match ($unit) {
+            Unit::Year => $this->addYears($amount),
+            Unit::Month => $this->addMonths($amount),
+            Unit::Day => $this->addDays($amount),
+            Unit::Hour => $this->addHours($amount),
+            Unit::Minute => $this->addMinutes($amount),
+            Unit::Second => $this->addSeconds($amount),
+        };
+    }
+
+    /**
+     * @param Unit $unit
+     * @param int|float $amount
+     * @param Unit $clamp
+     * @return static
+     */
+    public function addUnitWithClamping(Unit $unit, int|float $amount, Unit $clamp): static
+    {
+        $end = $this->toEndOfUnit($clamp);
+        $added = $this->addUnit($unit, $amount);
+
+        return ($added > $end)
+            ? $end
+            : $added;
+    }
+
+    /**
      * @param int $amount
      * @return static
      */
@@ -340,6 +383,49 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
+     * @param Unit $unit
+     * @param int|float $amount
+     * @return static
+     */
+    public function subtractUnit(Unit $unit, int|float $amount): static
+    {
+        if (is_float($amount)) {
+            return match ($unit) {
+                Unit::Second => $this->subtractSeconds($amount),
+                default => throw new InvalidArgumentException('Only seconds can be fractional.', [
+                    'unit' => $unit,
+                    'amount' => $amount,
+                ]),
+            };
+        }
+
+        return match ($unit) {
+            Unit::Year => $this->subtractYears($amount),
+            Unit::Month => $this->subtractMonths($amount),
+            Unit::Day => $this->subtractDays($amount),
+            Unit::Hour => $this->subtractHours($amount),
+            Unit::Minute => $this->subtractMinutes($amount),
+            Unit::Second => $this->subtractSeconds($amount),
+        };
+    }
+
+    /**
+     * @param Unit $unit
+     * @param int|float $amount
+     * @param Unit $clamp
+     * @return static
+     */
+    public function subtractUnitWithClamping(Unit $unit, int|float $amount, Unit $clamp): static
+    {
+        $start = $this->toStartOfUnit($clamp);
+        $subtracted = $this->subtractUnit($unit, $amount);
+
+        return ($subtracted < $start)
+            ? $start
+            : $subtracted;
+    }
+
+    /**
      * @param int $amount
      * @return static
      */
@@ -393,44 +479,10 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         return $this->shift(seconds: -static::ensurePositive($amount));
     }
 
-    public function addUnit(Unit $unit, int|float $amount): static
-    {
-        if (is_float($amount)) {
-            return match ($unit) {
-                Unit::Second => $this->addSeconds($amount),
-                default => throw new InvalidArgumentException('Only seconds can be fractional.', [
-                    'unit' => $unit,
-                    'amount' => $amount,
-                ]),
-            };
-        }
-
-        return match ($unit) {
-            Unit::Year => $this->addYears($amount),
-            Unit::Month => $this->addMonths($amount),
-            Unit::Day => $this->addDays($amount),
-            Unit::Hour => $this->addHours($amount),
-            Unit::Minute => $this->addMinutes($amount),
-            Unit::Second => $this->addSeconds($amount),
-        };
-    }
-
     /**
      * @param Unit $unit
-     * @param int|float $amount
-     * @param Unit $clamp
      * @return static
      */
-    public function addUnitWithClamping(Unit $unit, int|float $amount, Unit $clamp): static
-    {
-        $end = $this->toEndOfUnit($clamp);
-        $added = $this->addUnit($unit, $amount);
-
-        return ($added > $end)
-            ? $end
-            : $added;
-    }
-
     public function toStartOfUnit(Unit $unit): static
     {
         return match ($unit) {
@@ -443,6 +495,10 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         };
     }
 
+    /**
+     * @param Unit $unit
+     * @return static
+     */
     public function toEndOfUnit(Unit $unit): static
     {
         return match ($unit) {
