@@ -12,7 +12,6 @@ use Kirameki\Core\Exceptions\UnreachableException;
 use Kirameki\Time\Exceptions\InvalidFormatException;
 use Stringable;
 use function assert;
-use function compact;
 use function date_default_timezone_get;
 use function explode;
 use function floor;
@@ -416,23 +415,20 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         };
     }
 
+    /**
+     * @param Unit $unit
+     * @param int|float $amount
+     * @param Unit $clamp
+     * @return static
+     */
     public function addUnitWithClamping(Unit $unit, int|float $amount, Unit $clamp): static
     {
-        $original = clone $this;
-
+        $end = $this->toEndOfUnit($clamp);
         $added = $this->addUnit($unit, $amount);
 
-        $start = $original->toStartOfUnit($clamp);
-        if ($added < $start) {
-            return $start;
-        }
-
-        $end = $original->toEndOfUnit($clamp);
-        if ($added > $end) {
-            return $end;
-        }
-
-        return $added;
+        return ($added > $end)
+            ? $end
+            : $added;
     }
 
     public function toStartOfUnit(Unit $unit): static
