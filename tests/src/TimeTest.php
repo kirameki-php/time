@@ -198,18 +198,24 @@ final class TimeTest extends TestCase
         $now = new Time('2000-01-01 12:34:56Z');
         $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(years: 0)->toString());
         $this->assertSame('2001-01-01 12:34:56.000000Z', $now->shift(years: 1)->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(years: -1)->toString());
+        $this->assertSame('1999-01-01 12:34:56.000000Z', $now->shift(years: -1)->toString());
         $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(months: 0)->toString());
         $this->assertSame('2000-02-01 12:34:56.000000Z', $now->shift(months: 1)->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(months: -1)->toString());
+        $this->assertSame('1999-12-01 12:34:56.000000Z', $now->shift(months: -1)->toString());
         $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(days: 0)->toString());
         $this->assertSame('2000-01-02 12:34:56.000000Z', $now->shift(days: 1)->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(days: -1)->toString());
+        $this->assertSame('1999-12-31 12:34:56.000000Z', $now->shift(days: -1)->toString());
         $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(hours: 0)->toString());
         $this->assertSame('2000-01-01 13:34:56.000000Z', $now->shift(hours: 1)->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(hours: -1)->toString());
+        $this->assertSame('2000-01-01 11:34:56.000000Z', $now->shift(hours: -1)->toString());
         $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(minutes: 0)->toString());
         $this->assertSame('2000-01-01 12:35:56.000000Z', $now->shift(minutes: 1)->toString());
+        $this->assertSame('2000-01-01 12:33:56.000000Z', $now->shift(minutes: -1)->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000Z', $now->shift(seconds: 0)->toString());
+        $this->assertSame('2000-01-01 12:34:57.000000Z', $now->shift(seconds: 1)->toString());
+        $this->assertSame('2000-01-01 12:34:55.000000Z', $now->shift(seconds: -1)->toString());
+        $this->assertSame('2000-01-01 12:34:55.999999Z', $now->shift(seconds: -0.000001)->toString());
+        $this->assertSame('2000-01-01 12:36:57.000000Z', $now->shift(minutes: 1, seconds: 61)->toString());
     }
 
     public function test_addUnit(): void
@@ -289,8 +295,12 @@ final class TimeTest extends TestCase
 
     public function test_addMonths(): void
     {
-        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addYears(0)->toString());
-        $this->assertSame('2001-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addYears(1)->toString());
+        $this->assertSame('2000-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addMonths(0)->toString());
+        $this->assertSame('2000-02-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->addMonths(1)->toString());
+        $this->assertSame('2000-02-29 00:00:00.000000Z', (new Time('2000-01-31 00:00:00Z'))->addMonths(1)->toString());
+        $this->assertSame('2000-03-02 00:00:00.000000Z', (new Time('2000-01-31 00:00:00Z'))->addMonths(1, true)->toString());
+        $this->assertSame('2000-03-31 00:00:00.000000Z', (new Time('2000-01-31 00:00:00Z'))->addMonths(2, true)->toString());
+        $this->assertSame('2000-05-01 00:00:00.000000Z', (new Time('2000-03-31 00:00:00Z'))->addMonths(1, true)->toString());
     }
 
     public function test_addMonths_with_negative_value(): void
@@ -378,6 +388,10 @@ final class TimeTest extends TestCase
         $this->assertSame('1999-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMonths(1)->toString());
         $this->assertSame('1999-01-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMonths(12)->toString());
         $this->assertSame('1998-12-01 00:00:00.000000Z', (new Time('2000-01-01 00:00:00Z'))->subtractMonths(13)->toString());
+        $this->assertSame('2000-02-29 00:00:00.000000Z', (new Time('2000-03-31 00:00:00Z'))->subtractMonths(1)->toString());
+        $this->assertSame('2000-02-29 00:00:00.000000Z', (new Time('2000-04-30 00:00:00Z'))->subtractMonths(2)->toString());
+        $this->assertSame('2000-03-02 00:00:00.000000Z', (new Time('2000-03-31 00:00:00Z'))->subtractMonths(1, true)->toString());
+        $this->assertSame('2000-03-01 00:00:00.000000Z', (new Time('2000-04-30 00:00:00Z'))->subtractMonths(2, true)->toString());
     }
 
     public function test_subtractMonths_with_negative_value(): void

@@ -330,7 +330,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      * @param bool $overflow
      * @return static
      */
-    public function addMonths(int $amount, bool $overflow = true): static
+    public function addMonths(int $amount, bool $overflow = false): static
     {
         $added = $this->shift(months: static::ensurePositive($amount));
 
@@ -438,9 +438,20 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      * @param int $amount
      * @return static
      */
-    public function subtractMonths(int $amount): static
+    public function subtractMonths(int $amount, bool $overflow = false): static
     {
-        return $this->shift(months: -static::ensurePositive($amount));
+        $subtracted = $this->shift(months: -static::ensurePositive($amount));
+
+        if (!$overflow) {
+            if ($subtracted->getDay() === $this->getDay()) {
+                return $subtracted;
+            }
+
+            $fix = $subtracted->set(days: 1)->subtractMonths(1);
+            return $fix->set(days: $fix->getDaysInMonth());
+        }
+
+        return $subtracted;
     }
 
     /**
