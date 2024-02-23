@@ -27,9 +27,9 @@ use const STR_PAD_LEFT;
  */
 class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 {
-    public const string RFC3339_HUMAN = 'Y-m-d H:i:s.up';
-    public const string MIN = '0001-01-01 00:00:00.000000';
-    public const string MAX = '9999-12-31 23:59:59.999999';
+    public const RFC3339_HUMAN = 'Y-m-d H:i:s.up';
+    public const MIN = '0001-01-01 00:00:00.000000';
+    public const MAX = '9999-12-31 23:59:59.999999';
 
     # region Creation --------------------------------------------------------------------------------------------------
 
