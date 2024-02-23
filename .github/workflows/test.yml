@@ -8,8 +8,10 @@ jobs:
     - uses: php-actions/composer@v6
       with:
         php_extensions: intl pcntl
+    - name: Update container if needed
+      run: docker compose pull
     - name: Run test with docker compose
-      run: docker compose run --quiet-pull --rm app composer ci-test
+      run: docker compose run --build --rm app composer ci-test
     - uses: php-actions/phpstan@v3
       with:
         memory_limit: 1G
