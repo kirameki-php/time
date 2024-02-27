@@ -7,7 +7,7 @@
     "php": ">=8.2",
     "ext-intl": "*",
     "kirameki/core": "dev-main",
-    "psr/clock": "~1"
+    "psr/clock": "^1.0"
   },
   "require-dev": {
     "kirameki/dumper": "dev-main",

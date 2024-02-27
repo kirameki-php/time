@@ -8,7 +8,6 @@ use DateTimeInterface;
 use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
-use Kirameki\Core\Exceptions\UnreachableException;
 use Kirameki\Time\Exceptions\InvalidFormatException;
 use Stringable;
 use function assert;
@@ -18,7 +17,6 @@ use function floor;
 use function implode;
 use function in_array;
 use function is_float;
-use function number_format;
 use function str_pad;
 use const STR_PAD_LEFT;
 
@@ -104,19 +102,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function createFromTimestamp(int|float $timestamp): static
     {
-        $formatted = number_format($timestamp, 6, '.', '');
-        $base = DateTime::createFromFormat('U.u', $formatted);
-
-        if ($base !== false) {
-            $base->setTimezone(static::getCurrentTimeZone());
-            return static::createFromInterface($base);
-        }
-
-        // @codeCoverageIgnoreStart
-        throw new UnreachableException('Failed to create DateTime from timestamp.', [
-            'timestamp' => $timestamp,
-        ]);
-        // @codeCoverageIgnoreEnd
+        return self::parse('@' . $timestamp)->setTimezone(static::getCurrentTimeZone());
     }
 
     /**
@@ -132,7 +118,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function today(): static
     {
-        return new static('today');
+        return static::parse('today');
     }
 
     /**
@@ -140,7 +126,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function yesterday(): static
     {
-        return new static('yesterday');
+        return static::parse('yesterday');
     }
 
     /**
@@ -148,7 +134,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function tomorrow(): static
     {
-        return new static('tomorrow');
+        return static::parse('tomorrow');
     }
 
     /**
@@ -436,6 +422,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
 
     /**
      * @param int $amount
+     * @param bool $overflow
      * @return static
      */
     public function subtractMonths(int $amount, bool $overflow = false): static
