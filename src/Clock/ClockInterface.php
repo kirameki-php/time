@@ -8,7 +8,15 @@ use Psr\Clock\ClockInterface as PsrClockInterface;
 
 interface ClockInterface extends PsrClockInterface
 {
+    /**
+     * Return type changed to Time from DateTimeImmutable
+     *
+     * @return Time
+     */
     public function now(): Time;
 
+    /**
+     * @return DateTimeZone
+     */
     public function getTimezone(): DateTimeZone;
 }
