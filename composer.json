@@ -11,8 +11,8 @@
   },
   "require-dev": {
     "kirameki/dumper": "dev-main",
-    "phpstan/phpstan": "~1",
-    "phpunit/phpunit": "~10"
+    "phpstan/phpstan": "~2",
+    "phpunit/phpunit": "~11"
   },
   "autoload": {
     "psr-4": {
