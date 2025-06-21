@@ -33,6 +33,8 @@ final class TimeTest extends TestCase
 
     public function test___construct_no_args(): void
     {
+        $dt = new DateTimeImmutable('@' . microtime(true), new DateTimeZone('Z'));
+        var_dump($dt);
         $this->assertSame('UTC', (new Time())->getTimezone()->getName());
     }
 
