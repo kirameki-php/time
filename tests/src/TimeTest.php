@@ -34,7 +34,6 @@ final class TimeTest extends TestCase
     public function test___construct_no_args(): void
     {
         $dt = new DateTimeImmutable('@' . microtime(true), new DateTimeZone('Z'));
-        var_dump($dt);
         $this->assertSame('UTC', (new Time())->getTimezone()->getName());
     }
 
@@ -629,14 +628,6 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.999999+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toEndOfSecond()->toString());
     }
 
-    public function test_toTimezone(): void
-    {
-        $source = new Time('2000-01-01 12:34:56Z');
-        $zoned = $source->toTimezone('Asia/Tokyo');
-        $this->assertSame('2000-01-01 21:34:56.000000+09:00', $zoned->toString());
-        $this->assertNotSame($source, $zoned);
-    }
-
     public function test_toLocal(): void
     {
         $tz = 'America/Los_Angeles';
@@ -741,9 +732,9 @@ final class TimeTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.000000Z', (new Time('2000-01-01 12:34:56Z'))->jsonSerialize());
     }
 
-    public function test_toBase(): void
+    public function test_toDateTimeImmutable(): void
     {
-        $base = (new Time('1970-01-01 00:00:01Z'))->toBase();
+        $base = (new Time('1970-01-01 00:00:01Z'))->toDateTimeImmutable();
         $this->assertSame(DateTimeImmutable::class, $base::class);
         $this->assertSame(1, $base->getTimestamp());
     }

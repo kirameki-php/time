@@ -13,6 +13,8 @@ use const STR_PAD_LEFT;
 
 trait Helpers
 {
+    # region Getters ---------------------------------------------------------------------------------------------------
+
     /**
      * @return int
      */
@@ -62,6 +64,8 @@ trait Helpers
     {
         return (float) $this->format('s.u');
     }
+
+    # endregion Getters ------------------------------------------------------------------------------------------------
 
     # region Mutation --------------------------------------------------------------------------------------------------
 
@@ -453,7 +457,7 @@ trait Helpers
      */
     public function toStartOfHour(): static
     {
-        return $this->setTime($this->getHours(), 0, 0);
+        return $this->setTime($this->getHours(), 0);
     }
 
     /**
@@ -469,7 +473,7 @@ trait Helpers
      */
     public function toStartOfMinute(): static
     {
-        return $this->setTime($this->getHours(), 0);
+        return $this->setTime($this->getHours(), $this->getMinutes());
     }
 
     /**
@@ -477,7 +481,7 @@ trait Helpers
      */
     public function toEndOfMinute(): static
     {
-        return $this->setTime($this->getHours(), 59, 999999);
+        return $this->setTime($this->getHours(), $this->getMinutes(), 59, 999999);
     }
 
     /**
