@@ -10,6 +10,7 @@ use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\DayOfWeek;
 use Kirameki\Time\Exceptions\InvalidFormatException;
+use Kirameki\Time\Instant;
 use Kirameki\Time\Time;
 use Kirameki\Time\Unit;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -634,7 +635,7 @@ final class TimeTest extends TestCase
         date_default_timezone_set($tz);
         $this->runAfterTearDown(fn() => date_default_timezone_set('UTC'));
 
-        $source =new Time('2000-01-01 12:34:56+09:00');
+        $source = new Time('2000-01-01 12:34:56+09:00');
         $local = $source->toLocal();
         $this->assertSame('1999-12-31 19:34:56.000000-08:00', $local->toString());
         $this->assertNotSame($source, $local);
@@ -646,6 +647,14 @@ final class TimeTest extends TestCase
         $utc = $source->toUtc();
         $this->assertSame('2000-01-01 03:34:56.000000Z', $utc->toString());
         $this->assertNotSame($source, $utc);
+    }
+
+    public function test_toInstant(): void
+    {
+        $source = new Time('2000-01-01 12:34:56+09:00');
+        $instant = $source->toInstant();
+        $this->assertInstanceOf(Instant::class, $instant);
+        $this->assertSame('2000-01-01 03:34:56.000000Z', $instant->toString());
     }
 
     public function test_clamp(): void
