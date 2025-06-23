@@ -15,56 +15,33 @@ use Kirameki\Time\Instant;
 use Kirameki\Time\Time;
 use Kirameki\Time\Unit;
 use PHPUnit\Framework\Attributes\DataProvider;
-use function date_default_timezone_get;
 use function date_default_timezone_set;
 use function json_encode;
 
-final class TimeTest extends TestCase
+final class
+InstantTest extends TestCase
 {
-    private bool $timezoneSet = false;
-
-    protected function setTestTimeZone(string $zone): void
-    {
-        if ($this->timezoneSet === false) {
-            $old = date_default_timezone_get();
-            $this->runAfterTearDown(fn() => date_default_timezone_set($old));
-            $this->timezoneSet = true;
-        }
-        date_default_timezone_set($zone);
-    }
-
     public function test___construct_no_args(): void
     {
-        $dt = new DateTimeImmutable('@' . microtime(true), new DateTimeZone('Z'));
-        $this->assertSame('UTC', (new Time())->getTimezone()->getName());
+        $now = new DateTimeImmutable('now');
+        $instant = new Instant();
+        $this->assertGreaterThanOrEqual($now->getTimestamp(), $instant->getTimestamp());
+        $this->assertSame('+00:00', $instant->getTimezone()->getName());
     }
 
     public function test___construct_with_time_args(): void
     {
-        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{6}Z$/', (new Time('now'))->toString());
-        $this->assertSame('UTC', (new Time('2000-01-01 12:34:56'))->getTimezone()->getName());
-        $this->assertSame('2000-01-01 12:34:00.000000Z', (new Time('2000-01-01 12:34:00Z'))->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000+09:00', (new Time('2000-01-01 12:34:56+09:00'))->toString());
-        $this->assertSame('2000-01-01 12:34:56.111000+09:00', (new Time('2000-01-01 12:34:56.111+09:00'))->toString());
-        $this->assertSame('2000-01-01 12:34:56.111111+09:00', (new Time('2000-01-01 12:34:56.111111+09:00'))->toString());
-    }
+        $time = new Instant(946730096); // 2000-01-01 12:34:56 UTC
+        $this->assertSame('2000-01-01 12:34:56.000000Z', $time->toString());
+        $this->assertSame('+00:00', $time->getTimezone()->getName());
 
-    public function test___construct_invalid_date_warning_thrown(): void
-    {
-        $this->expectExceptionMessage('Invalid format: ["The parsed date was invalid"]');
-        $this->expectException(InvalidFormatException::class);
-        new Time('Feb 30th')->toString();
     }
 
     public function test_createFromFormat(): void
     {
-        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromFormat('Y m d H i s', '2000 01 01 12 34 56')->toString());
-        $this->assertSame('2000-01-01 12:34:56.111000Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111')->toString());
-        $this->assertSame('2000-01-01 12:34:56.111111Z', Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
-        $this->setTestTimeZone('Asia/Tokyo');
-        $time = Time::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111');
-        $this->assertInstanceOf(Time::class, $time);
-        $this->assertSame('2000-01-01 12:34:56.111111+09:00', $time->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Instant::createFromFormat('Y m d H i s', '2000 01 01 12 34 56')->toString());
+        $this->assertSame('2000-01-01 12:34:56.111000Z', Instant::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111')->toString());
+        $this->assertSame('2000-01-01 12:34:56.111111Z', Instant::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
     }
 
     public function test_createFromFormat_no_timezone(): void
@@ -101,20 +78,17 @@ final class TimeTest extends TestCase
     public function test_createFromInterface(): void
     {
         $this->expectException(NotSupportedException::class);
-        $this->expectExceptionMessage('Kirameki\Time\Time::createFromInterface() is not supported.');
-        Time::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56Z'));
+        $this->expectExceptionMessage('Kirameki\Time\Instant::createFromInterface() is not supported.');
+        Instant::createFromInterface(new DateTimeImmutable('2000-01-01 12:34:56Z'));
     }
 
     public function test_createFromTimestamp(): void
     {
-        $this->assertSame('1970-01-01 00:00:00.000000Z', Time::createFromTimestamp(0)->toString());
-        $this->assertSame('1970-01-01 00:00:01.234567Z', Time::createFromTimestamp(1.234567)->toString());
-        $this->assertSame('2000-01-01 12:34:56.000000Z', Time::createFromTimestamp(946730096)->toString());
-        $this->assertSame('1900-01-01 00:00:00.000000Z', Time::createFromTimestamp(-2208988800)->toString());
-        $this->assertSame('2100-01-01 00:00:00.000000Z', Time::createFromTimestamp(4102444800)->toString());
-
-        $this->setTestTimeZone('Asia/Tokyo');
-        $this->assertSame('1970-01-01 09:00:00.000000+09:00', Time::createFromTimestamp(0)->toString());
+        $this->assertSame('1970-01-01 00:00:00.000000Z', Instant::createFromTimestamp(0)->toString());
+        $this->assertSame('1970-01-01 00:00:01.234567Z', Instant::createFromTimestamp(1.234567)->toString());
+        $this->assertSame('2000-01-01 12:34:56.000000Z', Instant::createFromTimestamp(946730096)->toString());
+        $this->assertSame('1900-01-01 00:00:00.000000Z', Instant::createFromTimestamp(-2208988800)->toString());
+        $this->assertSame('2100-01-01 00:00:00.000000Z', Instant::createFromTimestamp(4102444800)->toString());
     }
 
     public function test_now(): void
@@ -150,17 +124,11 @@ final class TimeTest extends TestCase
     public function test_min(): void
     {
         $this->assertSame('0001-01-01 00:00:00.000000Z', Time::min()->toString());
-
-        $this->setTestTimeZone('Asia/Tokyo');
-        $this->assertSame('0001-01-01 00:00:00.000000+09:18', Time::min()->toString());
     }
 
     public function test_max(): void
     {
         $this->assertSame('9999-12-31 23:59:59.999999Z', Time::max()->toString());
-
-        $this->setTestTimeZone('Asia/Tokyo');
-        $this->assertSame('9999-12-31 23:59:59.999999+09:00', Time::max()->toString());
     }
 
     public function test_set(): void

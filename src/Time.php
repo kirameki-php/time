@@ -8,9 +8,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
-use Kirameki\Time\Exceptions\InvalidFormatException;
 use Stringable;
-use function assert;
 use function date_default_timezone_get;
 use function in_array;
 
@@ -43,62 +41,12 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     }
 
     /**
-     * @param string $datetime
-     * @return static
-     */
-    public static function parse(string $datetime): static
-    {
-        return new static($datetime);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
-    {
-        if ($timezone !== null) {
-            throw new InvalidArgumentException('Timezones are not supported as arguments and exists only for compatibility with base class.', [
-                'format' => $format,
-                'datetime' => $datetime,
-                'timezone' => $timezone,
-            ]);
-        }
-
-        $instance = parent::createFromFormat($format, $datetime);
-
-        // NOTE: Invalid dates (ex: Feb 30th) can slip through, so we handle that here
-        if ($instance === false) {
-            $errors = DateTime::getLastErrors();
-            assert($errors !== false);
-            static::throwLastError($errors, $datetime);
-        }
-
-        return $instance;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function createFromInterface(DateTimeInterface $object): static
-    {
-        return parent::createFromInterface($object);
-    }
-
-    /**
      * @param int|float $timestamp
      * @return static
      */
     public static function createFromTimestamp(int|float $timestamp): static
     {
-        return self::parse('@' . $timestamp)->toLocal();
-    }
-
-    /**
-     * @return static
-     */
-    public static function now(): static
-    {
-        return new static();
+        return parent::createFromTimestamp($timestamp)->toLocal();
     }
 
     /**
@@ -106,7 +54,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function today(): static
     {
-        return static::parse('today');
+        return new static('today');
     }
 
     /**
@@ -114,7 +62,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function yesterday(): static
     {
-        return static::parse('yesterday');
+        return new static('yesterday');
     }
 
     /**
@@ -122,7 +70,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function tomorrow(): static
     {
-        return static::parse('tomorrow');
+        return new static('tomorrow');
     }
 
     /**
@@ -130,7 +78,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function min(): static
     {
-        return static::parse(self::MIN);
+        return new static(self::MIN);
     }
 
     /**
@@ -138,7 +86,7 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
      */
     public static function max(): static
     {
-        return static::parse(self::MAX);
+        return new static(self::MAX);
     }
 
     /**
@@ -147,18 +95,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     protected static function getCurrentTimeZone(): DateTimeZone
     {
         return new DateTimeZone(date_default_timezone_get());
-    }
-
-    /**
-     * @param array{errors: list<string>, warnings: list<string>} $errors
-     * @param string $datetime
-     * @return never
-     */
-    protected static function throwLastError(array $errors, string $datetime): never
-    {
-        throw new InvalidFormatException($errors, [
-            'datetime' => $datetime,
-        ]);
     }
 
     # endregion Creation -----------------------------------------------------------------------------------------------

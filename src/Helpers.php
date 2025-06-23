@@ -2,8 +2,14 @@
 
 namespace Kirameki\Time;
 
+use DateTime;
 use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
+use Kirameki\Core\Exceptions\NotSupportedException;
+use Kirameki\Time\Exceptions\InvalidFormatException;
+use function assert;
 use function explode;
 use function floor;
 use function implode;
@@ -13,6 +19,61 @@ use const STR_PAD_LEFT;
 
 trait Helpers
 {
+    /**
+     * @return static
+     */
+    public static function now(): static
+    {
+        return new static();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function createFromInterface(DateTimeInterface $object): DateTimeImmutable
+    {
+        throw new NotSupportedException(static::class . '::createFromInterface() is not supported.', [
+            'object' => $object,
+        ]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
+    {
+        if ($timezone !== null) {
+            throw new InvalidArgumentException('Timezones are not supported as arguments and exists only for compatibility with base class.', [
+                'format' => $format,
+                'datetime' => $datetime,
+                'timezone' => $timezone,
+            ]);
+        }
+
+        $instance = parent::createFromFormat($format, $datetime);
+
+        // NOTE: Invalid dates (ex: Feb 30th) can slip through, so we handle that here
+        if ($instance === false) {
+            $errors = DateTime::getLastErrors();
+            assert($errors !== false);
+            static::throwLastError($errors, $datetime);
+        }
+
+        return $instance;
+    }
+
+    /**
+     * @param array{errors: list<string>, warnings: list<string>} $errors
+     * @param string $datetime
+     * @return never
+     */
+    protected static function throwLastError(array $errors, string $datetime): never
+    {
+        throw new InvalidFormatException($errors, [
+            'datetime' => $datetime,
+        ]);
+    }
+
     # region Getters ---------------------------------------------------------------------------------------------------
 
     /**
