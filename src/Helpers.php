@@ -619,6 +619,28 @@ trait Helpers
 
     # endregion Comparison ---------------------------------------------------------------------------------------------
 
+    # region Calendar --------------------------------------------------------------------------------------------------
+
+    /**
+     * @return int
+     */
+    public function getDaysInMonth(): int
+    {
+        return (int) $this->format('t');
+    }
+
+    /**
+     * Returns the day of the year (1-366)
+     *
+     * @return int
+     */
+    public function getDayOfYear(): int
+    {
+        return 1 + (int) $this->format('z');
+    }
+
+    # endregion Calendar -----------------------------------------------------------------------------------------------
+
     # region Conversion ------------------------------------------------------------------------------------------------
 
     /**

@@ -130,14 +130,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     # region Calendar --------------------------------------------------------------------------------------------------
 
     /**
-     * @return int
-     */
-    public function getDaysInMonth(): int
-    {
-        return (int) $this->format('t');
-    }
-
-    /**
      * @return DayOfWeek
      */
     public function getDayOfWeek(): DayOfWeek
@@ -151,16 +143,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
             6 => DayOfWeek::Saturday,
             7 => DayOfWeek::Sunday,
         };
-    }
-
-    /**
-     * Returns the day of the year (1-366)
-     *
-     * @return int
-     */
-    public function getDayOfYear(): int
-    {
-        return 1 + (int) $this->format('z');
     }
 
     /**
