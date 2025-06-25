@@ -217,14 +217,6 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
         return in_array($this->getDayOfWeek(), [DayOfWeek::Saturday, DayOfWeek::Sunday], true);
     }
 
-    /**
-     * @return bool
-     */
-    public function isLeapYear(): bool
-    {
-        return (bool) $this->format('L');
-    }
-
     #endregion Calendar ------------------------------------------------------------------------------------------------
 
     # region Zone ------------------------------------------------------------------------------------------------------

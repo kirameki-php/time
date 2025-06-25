@@ -639,6 +639,14 @@ trait Helpers
         return 1 + (int) $this->format('z');
     }
 
+    /**
+     * @return bool
+     */
+    public function isLeapYear(): bool
+    {
+        return (bool) $this->format('L');
+    }
+
     # endregion Calendar -----------------------------------------------------------------------------------------------
 
     # region Conversion ------------------------------------------------------------------------------------------------
