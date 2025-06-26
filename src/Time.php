@@ -9,6 +9,7 @@ use DateTimeZone;
 use JsonSerializable;
 use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Stringable;
+use function assert;
 use function date_default_timezone_get;
 use function in_array;
 
@@ -47,6 +48,14 @@ class Time extends DateTimeImmutable implements JsonSerializable, Stringable
     public static function createFromTimestamp(int|float $timestamp): static
     {
         return parent::createFromTimestamp($timestamp)->toLocal();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
+    {
+        return static::createFromFormatCompat($format, $datetime, $timezone);
     }
 
     /**

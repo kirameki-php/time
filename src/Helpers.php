@@ -38,9 +38,13 @@ trait Helpers
     }
 
     /**
-     * @inheritDoc
+     * @param string $format
+     * @param string $datetime
+     * @param DateTimeZone|null $timezone
+     * @return static
+     * @throws InvalidFormatException
      */
-    public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
+    public static function createFromFormatCompat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
     {
         if ($timezone !== null) {
             throw new InvalidArgumentException('Timezones are not supported as arguments and exists only for compatibility with base class.', [

@@ -9,10 +9,8 @@ use Kirameki\Core\Exceptions\InvalidArgumentException;
 use Kirameki\Core\Exceptions\NotSupportedException;
 use Kirameki\Core\Testing\TestCase;
 use Kirameki\Time\Instant;
-use Kirameki\Time\Time;
 use Kirameki\Time\Unit;
 use PHPUnit\Framework\Attributes\DataProvider;
-use function dump;
 use function json_encode;
 use function strlen;
 
@@ -32,6 +30,7 @@ InstantTest extends TestCase
             24 => Instant::createFromFormat('Y-m-d H:i:s.vP', $time),
             26 => Instant::createFromFormat('Y-m-d H:i:s.u', $time),
             27 => Instant::createFromFormat('Y-m-d H:i:s.uP', $time),
+            default => throw new NotSupportedException(),
         };
     }
 
@@ -56,6 +55,8 @@ InstantTest extends TestCase
         $this->assertSame('2000-01-01 12:34:56.000000Z', Instant::createFromFormat('Y m d H i s', '2000 01 01 12 34 56')->toString());
         $this->assertSame('2000-01-01 12:34:56.111000Z', Instant::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111')->toString());
         $this->assertSame('2000-01-01 12:34:56.111111Z', Instant::createFromFormat('Y-m-d H:i:s.u', '2000-01-01 12:34:56.111111')->toString());
+        $this->assertSame('2000-01-01 11:34:56.000000Z', Instant::createFromFormat('Y-m-d H:i:sP', '2000-01-01 12:34:56+01:00')->toString());
+        $this->assertSame('2000-01-01 20:34:56.000000Z', Instant::createFromFormat('Y-m-d H:i:s P', '2000-01-01 12:34:56 America/Los_Angeles')->toString());
     }
 
     public function test_createFromFormat_no_timezone(): void
@@ -604,7 +605,7 @@ InstantTest extends TestCase
     {
         $this->expectExceptionMessage('At least one of $lower or $upper must be specified.');
         $this->expectException(InvalidArgumentException::class);
-        Time::now()->clamp();
+        Instant::now()->clamp();
     }
 
     public function test_between(): void

@@ -52,4 +52,16 @@ class Instant extends DateTimeImmutable implements JsonSerializable, Stringable
     {
         return new static(new DateTimeImmutable(self::MAX));
     }
+
+    /**
+     * @inheritDoc
+     */
+    public static function createFromFormat(string $format, string $datetime, ?DateTimeZone $timezone = null): static
+    {
+        $instance = static::createFromFormatCompat($format, $datetime, $timezone);
+
+        return $instance->format('p') !== 'Z'
+            ? new static((float) $instance->format('U.u'))
+            : $instance;
+    }
 }
