@@ -28,7 +28,7 @@ class SystemClock implements ClockInterface
      */
     public function now(): Time
     {
-        return (new Time())->setTimezone($this->timezone);
+        return new Time()->setTimezone($this->timezone);
     }
 
     /**
